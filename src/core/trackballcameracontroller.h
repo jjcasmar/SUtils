@@ -3,6 +3,7 @@
 
 #include <QWheelEvent>
 #include <Qt3DRender/QCamera>
+#include <QQuaternion>
 
 class TrackballCameraController
 {
@@ -19,6 +20,8 @@ protected:
     Qt3DRender::QCamera *m_controlledCamera;
     Qt::MouseButtons m_mouseButtonsPressed;
     QPoint m_mouseLastPosition;
+
+    QQuaternion m_lastRotation;
 
 
 };

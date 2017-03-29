@@ -20,12 +20,18 @@ public:
 
     void takeImage(const QString &filename);
     void takeVideo(const QString &directory);
+    void saveImage();
+
+Q_SIGNALS:
+    void imageTaken();
 
 protected:
     Qt3DRender::QRenderCapture *m_renderCaptureFrameGraph;
     Qt3DRender::QRenderCaptureReply *m_renderCaptureReply;
+    QMetaObject::Connection *m_renderCaptureReplyConnection;
 
     TrackballCameraController *m_trackballController;
+    uint m_imageCounter;
 
     // QWindow interface
 protected:
@@ -33,6 +39,8 @@ protected:
     void mousePressEvent(QMouseEvent *ev);
     void mouseReleaseEvent(QMouseEvent *ev);
     void mouseMoveEvent(QMouseEvent *ev);
+
+
 };
 
 #endif // OPENGLWINDOW_H

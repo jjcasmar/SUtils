@@ -16,5 +16,10 @@ ProfilerTimer::ProfilerTimer(const QString &identityString)
 
 ProfilerTimer::~ProfilerTimer()
 {
+    profile();
+}
+
+void ProfilerTimer::profile()
+{
     std::cout << "Elapsed time (" << m_identityString.toStdString() << "): " << elapsed() << std::endl;
 }

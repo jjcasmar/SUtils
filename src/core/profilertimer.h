@@ -15,6 +15,8 @@ private:
     ProfilerTimer(const ProfilerTimer &pt);
     ProfilerTimer &operator = (const ProfilerTimer &pt);
 
+    void profile();
+
     QString m_identityString;
 };
 

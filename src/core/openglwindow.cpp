@@ -22,7 +22,15 @@ OpenGLWindow::~OpenGLWindow()
 
 void OpenGLWindow::takeImage(const QString &filename)
 {
-
+    Qt3DRender::QRenderCaptureReply *captureReply = m_renderCaptureFrameGraph->requestCapture(m_imageCounter++);
+    QObject::connect(captureReply, &Qt3DRender::QRenderCaptureReply::completeChanged,
+                                                 [this, captureReply, filename](bool isComplete) {
+        if (isComplete)
+            captureReply->saveToFile(filename);
+            captureReply->deleteLater();
+            this->imageTaken();
+            //captureReply->deleteLater();
+    });
 }
 
 void OpenGLWindow::takeVideo(const QString &directory)
