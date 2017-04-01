@@ -1,4 +1,4 @@
-#include "../../core/openglwindow.h"
+#include "../../core/mainwindow.h"
 
 #include <QApplication>
 
@@ -9,10 +9,11 @@ int main(int argc, char **argv) {
 
     QApplication app(argc, argv);
 
-    OpenGLWindow window;
 
-    Qt3DCore::QEntity *rootEntity = new Qt3DCore::QEntity;
-    window.setRootEntity(rootEntity);
+    MainWindow window;
+
+
+    Qt3DCore::QEntity *rootEntity = window.sceneRootEntity();
 
     //Create a simple cube
     Qt3DCore::QEntity *cubeEntity = new Qt3DCore::QEntity(rootEntity);
@@ -33,7 +34,7 @@ int main(int argc, char **argv) {
     lightEntity->addComponent(pointLight);
     lightEntity->addComponent(lightTransform);
 
-    Qt3DRender::QCamera *camera = window.camera();
+    Qt3DRender::QCamera *camera = window.sceneCamera();
     camera->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
     camera->setPosition(QVector3D(0, 1, 4.0f));
     camera->setViewCenter(QVector3D(0, 0, 0));

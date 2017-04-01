@@ -1,6 +1,8 @@
 #include "trackballcameracontroller.h"
 #include "trackballhelper.h"
 
+#include <Qt3DCore/QTransform>
+
 TrackballCameraController::TrackballCameraController(Qt3DRender::QCamera *camera)
 {
     m_controlledCamera = camera;
@@ -18,9 +20,6 @@ void TrackballCameraController::wheelEvent(QWheelEvent *ev)
     float targetDistance = (eyePosition - targetView).length();
     m_controlledCamera->translate(QVector3D(0.0,0.0,-0.5*targetDistance*ev->angleDelta().y()/120.0),
                                   Qt3DRender::QCamera::DontTranslateViewCenter);
-
-    qDebug() << "Target view: " <<targetView;
-    qDebug() << "Eye position: " << eyePosition;
 }
 
 void TrackballCameraController::mousePressEvent(QMouseEvent *ev)
@@ -43,26 +42,25 @@ void TrackballCameraController::mouseMoveEvent(QSize screenSize, QMouseEvent *ev
                                        -0.005*deltaPos.y(),
                                        0
                                       },
-                                      Qt3DRender::QCamera::DontTranslateViewCenter);
-
-        qDebug() << "Position: " << m_controlledCamera->position();
-        qDebug() << "View center: " << m_controlledCamera->viewCenter();
+                                      Qt3DRender::QCamera::TranslateViewCenter);
     }
 
     if (m_mouseButtonsPressed & Qt::LeftButton) {
-
-        QVector3D eyePosition = m_controlledCamera->position();
-        QVector3D targetView = m_controlledCamera->viewCenter();
-        float targetDistance = (eyePosition - targetView).length();
-
         QQuaternion rotation = TrackBallHelper::rotation(m_mouseLastPosition,
                                                          mouseCurrentPos,
                                                          screenSize,
                                                          //QPoint(0,0),
                                                          QPoint(screenSize.width()/2,screenSize.height()/2),
-                                                         targetDistance);
+                                                         1.0);
 
-        m_controlledCamera->rotateAboutViewCenter(rotation);
+        QQuaternion currentRotation = m_controlledCamera->transform()->rotation();
+        QQuaternion currentRotationInversed = currentRotation.conjugated();
+
+        QVector3D rotatedAxis = currentRotationInversed.rotatedVector(rotation.vector());
+        float angle = 1.3*rotation.scalar();
+
+        m_controlledCamera->rotateAboutViewCenter(QQuaternion::fromAxisAndAngle(rotatedAxis,
+                                                                                angle));
     }
 
     m_mouseLastPosition = mouseCurrentPos;

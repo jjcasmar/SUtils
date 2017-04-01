@@ -34,7 +34,7 @@ public:
         QVector3D posAvg = (lastPos + currentPos) / 2;
 
 		// Compute axis of rotation:
-        QVector3D dir = QVector3D::crossProduct(lastPos,currentPos);
+        QVector3D dir = QVector3D::crossProduct(currentPos,lastPos);
 
 		// Approximate rotation angle:
         float t = dir.length() / posAvg.length();
@@ -45,9 +45,7 @@ public:
 		if(t < -1.0f)
 			t = -1.0f;
 
-        //DRQuaternionT<Scalar> q(dir, t);
-        QQuaternion q = QQuaternion::fromAxisAndAngle(dir, -180/3.1415*t);
-
+        QQuaternion q = QQuaternion::fromAxisAndAngle(dir, t);
         return q;
 	}
 

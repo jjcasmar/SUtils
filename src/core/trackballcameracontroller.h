@@ -22,8 +22,6 @@ protected:
     QPoint m_mouseLastPosition;
 
     QQuaternion m_lastRotation;
-
-
 };
 
 #endif // TRACKBALLCAMERACONTROLLER_H

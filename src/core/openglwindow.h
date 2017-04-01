@@ -3,6 +3,7 @@
 
 #include <QWindow>
 #include <Qt3DExtras/Qt3DWindow>
+#include <Qt3DLogic/QFrameAction>
 
 #include "trackballcameracontroller.h"
 
@@ -19,13 +20,18 @@ public:
     ~OpenGLWindow();
 
     void takeImage(const QString &filename);
-    void takeVideo(const QString &directory);
     void saveImage();
+
+    Qt3DCore::QEntity *rootEntity() const;
 
 Q_SIGNALS:
     void imageTaken();
+    void frameTick(float dt);
 
 protected:
+    Qt3DCore::QEntity *m_rootEntity;
+    Qt3DCore::QEntity *m_internalRootEntity;
+    Qt3DLogic::QFrameAction *m_frameAction;
     Qt3DRender::QRenderCapture *m_renderCaptureFrameGraph;
     Qt3DRender::QRenderCaptureReply *m_renderCaptureReply;
     QMetaObject::Connection *m_renderCaptureReplyConnection;
