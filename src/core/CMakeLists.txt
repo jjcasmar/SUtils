@@ -5,6 +5,7 @@ set(SOURCES
     mainwindow.cpp
     simulationwindow.cpp
     simulator.cpp
+    #boundingvolumesaspect.cpp
 )
 
 set(HEADERS
@@ -24,7 +25,7 @@ add_definitions(-DEIGEN2_SUPPORT)
 
 #add_subdirectory(vcglib)
 
-add_library(QUtils SHARED ${SOURCES} ${HEADERS})
+add_library(QUtils SHARED ${SOURCES})
 target_link_libraries(QUtils
     Qt5::Core
     Qt5::Gui

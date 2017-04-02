@@ -19,12 +19,30 @@ int main(int argc, char **argv) {
     Qt3DCore::QEntity *cubeEntity = new Qt3DCore::QEntity(rootEntity);
     Qt3DExtras::QCuboidMesh *cubeMesh = new Qt3DExtras::QCuboidMesh;
     Qt3DExtras::QPhongMaterial *material = new Qt3DExtras::QPhongMaterial;
+    Qt3DCore::QTransform *transform = new Qt3DCore::QTransform;
 
+    transform->setTranslation({1,0,0});
     material->setAmbient(QColor(0,0,0));
     material->setDiffuse(QColor(255,0,0));
 
     cubeEntity->addComponent(cubeMesh);
     cubeEntity->addComponent(material);
+    cubeEntity->addComponent(transform);
+
+    Qt3DCore::QEntity *blankEntity = new Qt3DCore::QEntity(cubeEntity);
+
+    Qt3DCore::QEntity *cubeEntity2 = new Qt3DCore::QEntity(blankEntity);
+    Qt3DExtras::QCuboidMesh *cubeMesh2 = new Qt3DExtras::QCuboidMesh;
+    Qt3DExtras::QPhongMaterial *material2 = new Qt3DExtras::QPhongMaterial;
+    Qt3DCore::QTransform *transform2 = new Qt3DCore::QTransform;
+
+    transform2->setTranslation({0,1,0});
+    material2->setAmbient(QColor(0,0,0));
+    material2->setDiffuse(QColor(0,255,0));
+
+    cubeEntity2->addComponent(cubeMesh2);
+    cubeEntity2->addComponent(material2);
+    cubeEntity2->addComponent(transform2);
 
     //Create a light
     Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
