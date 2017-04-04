@@ -21,6 +21,8 @@ public:
     float dt() const;
     void setDt(float dt);
 
+    bool isRunning();
+
 Q_SIGNALS:
     void dtChanged(float dt);
     void stepDone();
@@ -28,6 +30,7 @@ Q_SIGNALS:
 protected:
     float m_dt;
     QTimer *t;
+    bool m_isRunning;
 };
 
 #endif // SIMULATOR_H

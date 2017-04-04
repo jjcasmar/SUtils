@@ -14,6 +14,7 @@
 
 
 OpenGLWindow::OpenGLWindow() :
+    Qt3DWindow(),
     m_rootEntity(new Qt3DCore::QEntity),
     m_internalRootEntity(new Qt3DCore::QEntity),
     m_frameAction(new Qt3DLogic::QFrameAction),

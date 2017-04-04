@@ -28,6 +28,11 @@ protected:
 
     Simulator *m_simulator;
     QThread *m_simulatorThread;
+
+    // MainWindow interface
+protected slots:
+    void startVideo();
+    void stopVideo();
 };
 
 #endif // SIMULATIONWINDOW_H

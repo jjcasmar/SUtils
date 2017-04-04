@@ -2,6 +2,7 @@
 
 Simulator::Simulator() :
     t(new QTimer(this))
+  ,m_isRunning(false)
 {
     t->setInterval(0);
 }
@@ -13,6 +14,7 @@ void Simulator::step()
 
 void Simulator::run()
 {
+    m_isRunning = true;
     t->start();
     connect(t, &QTimer::timeout,
             [this]() {
@@ -22,6 +24,7 @@ void Simulator::run()
 
 void Simulator::pause()
 {
+    m_isRunning = false;
     t->stop();
 }
 
@@ -36,4 +39,9 @@ void Simulator::setDt(float dt)
         m_dt = dt;
         emit dtChanged(dt);
     }
+}
+
+bool Simulator::isRunning()
+{
+    return m_isRunning;
 }

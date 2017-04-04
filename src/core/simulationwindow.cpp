@@ -3,6 +3,9 @@
 #include <QtWidgets/QAction>
 #include <QToolBar>
 #include <simulator.h>
+#include <openglwindow.h>
+
+#include <QFileDialog>
 
 //TODO When taking a video, only capture frame when a new step have been done, overriding the
 //continue mode set in MainWindow
@@ -57,4 +60,32 @@ void SimulationWindow::setSimulator(Simulator *simulator)
         m_simulator->init();
         emit simulatorChanged(simulator);
     }
+}
+
+void SimulationWindow::startVideo()
+{
+    m_stopVideoAction->setEnabled(true);
+    m_takeVideoAction->setEnabled(false);
+    m_videoFrame = 0;
+    QString dir = QFileDialog::getExistingDirectory(this, "Take video", "~");
+
+    //In each frame, save an image
+    m_takeVideoSlot = connect(m_simulator, &Simulator::stepDone,
+                              [this, dir]() {
+        QString framename;
+        QTextStream stream(&framename);
+        stream << dir << "/frame_" << this->m_videoFrame++ << ".png";
+        m_OpenGLView->takeImage(framename);
+    });
+
+    if (!m_simulator->isRunning())
+        m_runSimulationAction->trigger();
+}
+
+void SimulationWindow::stopVideo()
+{
+    m_pauseSimulationAction->trigger();
+    disconnect(m_takeVideoSlot);
+    m_stopVideoAction->setEnabled(false);
+    m_takeVideoAction->setEnabled(true);
 }
