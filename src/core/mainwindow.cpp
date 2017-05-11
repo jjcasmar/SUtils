@@ -45,6 +45,11 @@ Qt3DRender::QCamera *MainWindow::sceneCamera() const
     return m_OpenGLView->camera();
 }
 
+Qt3DExtras::QTrackballCameraController *MainWindow::cameraController() const
+{
+    return m_OpenGLView->trackballCameraController();
+}
+
 //Qt3DExtras::QTrackballCameraController *MainWindow::cameraController() const
 //{
 //    return m_OpenGLView->trackballCameraController();

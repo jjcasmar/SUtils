@@ -4,6 +4,8 @@ set(SUTILS_SOURCES
     mainwindow.cpp
     simulationwindow.cpp
     simulator.cpp
+    trackballcameracontroller.cpp
+    wireframematerial.cpp
 )
 
 set(SUTILS_PUBLIC_HEADERS
@@ -12,6 +14,8 @@ set(SUTILS_PUBLIC_HEADERS
     mainwindow.h
     simulationwindow.h
     simulator.h
+    trackballcameracontroller.h
+    wireframematerial.h
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -25,6 +29,7 @@ set(SUTILS_LINK_LIBRARIES
     Qt5::Widgets
     Qt5::3DCore
     Qt5::3DRender
-    Qt5::3DExtras)
+    Qt5::3DExtras
+    Qt5::3DInput)
 
 common_library(SUtils)

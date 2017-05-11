@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(SUtils VERSION 0.1.0)
+project(SUtils VERSION 1.0.0)
 set(SUtils_VERSION_ABI 1)
 set(CMAKE_COLOR_MAKEFILE ON)
 
@@ -25,10 +25,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/common")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake")
 include(Common)
 
-common_find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets 3DCore 3DExtras 3DRender)
+common_find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets 3DCore 3DExtras 3DRender 3DInput)
 common_find_package_post()
 
 add_subdirectory(src)
 
-include(CPackConfig)
+include(CommonPackageConfig)
 

@@ -5,11 +5,17 @@
 #include <Qt3DExtras>
 #include <Qt3DRender>
 
+#include "../../core/wireframematerial.h"
+
 int main(int argc, char **argv) {
 
     QApplication app(argc, argv);
 
-
+    QSurfaceFormat format;
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setMajorVersion(3);
+    format.setMinorVersion(1);
+    QSurfaceFormat::setDefaultFormat(format);
     MainWindow window;
 
 
@@ -18,12 +24,12 @@ int main(int argc, char **argv) {
     //Create a simple cube
     Qt3DCore::QEntity *cubeEntity = new Qt3DCore::QEntity(rootEntity);
     Qt3DExtras::QCuboidMesh *cubeMesh = new Qt3DExtras::QCuboidMesh;
-    Qt3DExtras::QPhongMaterial *material = new Qt3DExtras::QPhongMaterial;
+//    Qt3DExtras::QPhongMaterial *material = new Qt3DExtras::QPhongMaterial;
     Qt3DCore::QTransform *transform = new Qt3DCore::QTransform;
 
+    WireframeMaterial *material = new WireframeMaterial;
+
     transform->setTranslation({1,0,0});
-    material->setAmbient(QColor(0,0,0));
-    material->setDiffuse(QColor(255,0,0));
 
     cubeEntity->addComponent(cubeMesh);
     cubeEntity->addComponent(material);
@@ -56,7 +62,6 @@ int main(int argc, char **argv) {
     camera->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
     camera->setPosition(QVector3D(0, 1, 4.0f));
     camera->setViewCenter(QVector3D(0, 0, 0));
-
 
     window.show();
     return app.exec();

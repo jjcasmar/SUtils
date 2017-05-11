@@ -11,14 +11,18 @@
 #include <Qt3DRender/QLayerFilter>
 #include <Qt3DExtras>
 #include <Qt3DRender>
-//#include <Qt3DExtras/QTrackballCameraController>
+
+#include "trackballcameracontroller.h"
+#include "wireframematerial.h"
 
 OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     Qt3DWindow(),
     m_rootEntity(new Qt3DCore::QEntity),
     m_internalRootEntity(new Qt3DCore::QEntity),
     m_frameAction(new Qt3DLogic::QFrameAction),
-    m_renderCaptureFrameGraph(new Qt3DRender::QRenderCapture)
+    m_renderCaptureFrameGraph(new Qt3DRender::QRenderCapture),
+    m_orbitCameraController(new Qt3DExtras::QOrbitCameraController),
+    m_trackballCameraController(new Qt3DExtras::QTrackballCameraController)
 //    m_trackballCameraController(new Qt3DExtras::QTrackballCameraController(m_internalRootEntity))
 {
     m_rootEntity->setParent(m_internalRootEntity);
@@ -63,7 +67,8 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     backgroundCameraSelector->setCamera(backgroundCamera);
 
     //Camera controller
-//    m_trackballCameraController->setCamera(this->camera());
+    m_trackballCameraController->setCamera(this->camera());
+    m_trackballCameraController->setParent(m_internalRootEntity);
 
     Qt3DRender::QLayer *layer = new Qt3DRender::QLayer;
     layerFilter->addLayer(layer);
@@ -101,6 +106,16 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     colorAttribute->setCount(4);
     backgroundMesh->geometry()->addAttribute(colorAttribute);
 
+    Qt3DCore::QEntity *floorEntity = new Qt3DCore::QEntity(m_internalRootEntity);
+    Qt3DExtras::QPlaneMesh *floorGeometryRenderer = new Qt3DExtras::QPlaneMesh;
+    WireframeMaterial *floorMaterial = new WireframeMaterial;
+    Qt3DCore::QTransform *floorTransform = new Qt3DCore::QTransform;
+    floorEntity->addComponent(floorGeometryRenderer);
+    floorEntity->addComponent(floorMaterial);
+    floorEntity->addComponent(floorTransform);
+    dynamic_cast<Qt3DExtras::QPlaneGeometry*>(floorGeometryRenderer->geometry())->setResolution(QSize(20,20));
+
+    floorTransform->setRotationX(90);
 
     //Add support for taking images
     //framegraph->setParent(m_renderCaptureFrameGraph);
@@ -128,6 +143,11 @@ void OpenGLWindow::takeImage(const QString &filename)
 Qt3DCore::QEntity *OpenGLWindow::rootEntity() const
 {
     return m_rootEntity;
+}
+
+Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
+{
+    return m_trackballCameraController;
 }
 
 //Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
