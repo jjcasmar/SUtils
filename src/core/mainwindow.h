@@ -2,8 +2,18 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <Qt3DCore/QEntity>
-#include <Qt3DRender/QCamera>
+
+namespace Qt3DCore {
+class QEntity;
+}
+
+namespace Qt3DRender {
+class QCamera;
+}
+
+namespace Qt3DExtras {
+class QTrackballCameraController;
+}
 
 class OpenGLWindow;
 
@@ -17,6 +27,7 @@ public:
 
     Qt3DCore::QEntity *sceneRootEntity() const;
     Qt3DRender::QCamera *sceneCamera() const;
+    Qt3DExtras::QTrackballCameraController *cameraController() const;
 
 protected slots:
     void takeScreenshot();
@@ -28,6 +39,7 @@ signals:
 
 protected:
     OpenGLWindow *m_OpenGLView;
+
 
     QAction *m_takeImageAction;
     QAction *m_takeVideoAction;

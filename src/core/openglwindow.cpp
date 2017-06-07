@@ -11,14 +11,15 @@
 #include <Qt3DRender/QLayerFilter>
 #include <Qt3DExtras>
 #include <Qt3DRender>
-
+#include <Qt3DExtras/QTrackballCameraController>
 
 OpenGLWindow::OpenGLWindow() :
     Qt3DWindow(),
     m_rootEntity(new Qt3DCore::QEntity),
     m_internalRootEntity(new Qt3DCore::QEntity),
     m_frameAction(new Qt3DLogic::QFrameAction),
-    m_renderCaptureFrameGraph(new Qt3DRender::QRenderCapture)
+    m_renderCaptureFrameGraph(new Qt3DRender::QRenderCapture),
+    m_trackballCameraController(new Qt3DExtras::QTrackballCameraController(m_internalRootEntity))
 {
     m_rootEntity->setParent(m_internalRootEntity);
     this->setRootEntity(m_internalRootEntity);
@@ -58,6 +59,9 @@ OpenGLWindow::OpenGLWindow() :
     backgroundCamera->setViewCenter({5000,5000,-9000});
     backgroundCamera->setUpVector({0,1,0});
     backgroundCameraSelector->setCamera(backgroundCamera);
+
+    //Camera controller
+    m_trackballCameraController->setCamera(this->camera());
 
     Qt3DRender::QLayer *layer = new Qt3DRender::QLayer;
     layerFilter->addLayer(layer);
@@ -102,40 +106,20 @@ OpenGLWindow::OpenGLWindow() :
     forwardRenderer->setParent(m_renderCaptureFrameGraph);
     m_renderCaptureFrameGraph->setParent(framegraph);
     setActiveFrameGraph(framegraph);
-
-    //Set the camera control
-    m_trackballController = new TrackballCameraController(camera());
-
-    //Set a grid floor
-    /*
-    Qt3DCore::QEntity *floorEntity = new Qt3DCore::QEntity(m_internalRootEntity);
-    Qt3DExtras::QPlaneMesh *floorRenderer = new Qt3DExtras::QPlaneMesh(floorEntity);
-    Qt3DExtras::QPhongMaterial *floorMaterial = new Qt3DExtras::QPhongMaterial(floorEntity);
-    Qt3DCore::QTransform *floorTransform = new Qt3DCore::QTransform(floorEntity);
-    floorRenderer->setWidth(100);
-    floorRenderer->setHeight(100);
-    floorRenderer->setMeshResolution(QSize(2,2));
-    floorMaterial->setDiffuse({50,50,50});
-    floorMaterial->setShininess(0);
-    floorEntity->addComponent(floorRenderer);
-    floorEntity->addComponent(floorMaterial);
-    */
 }
 
 OpenGLWindow::~OpenGLWindow()
 {
-
 }
 
 void OpenGLWindow::takeImage(const QString &filename)
 {
-    Qt3DRender::QRenderCaptureReply *captureReply = m_renderCaptureFrameGraph->requestCapture(m_imageCounter++);
-    QObject::connect(captureReply, &Qt3DRender::QRenderCaptureReply::completeChanged,
-                                                 [this, captureReply, filename](bool isComplete) {
-        if (isComplete)
-            captureReply->saveToFile(filename);
-            captureReply->deleteLater();
-            this->imageTaken();
+    Qt3DRender::QRenderCaptureReply *captureReply = m_renderCaptureFrameGraph->requestCapture();
+    QObject::connect(captureReply, &Qt3DRender::QRenderCaptureReply::completed,
+                     [this, captureReply, filename]() {
+        captureReply->saveImage(filename);
+        captureReply->deleteLater();
+        this->imageTaken();
     });
 }
 
@@ -144,22 +128,7 @@ Qt3DCore::QEntity *OpenGLWindow::rootEntity() const
     return m_rootEntity;
 }
 
-void OpenGLWindow::wheelEvent(QWheelEvent *ev)
+Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
 {
-    m_trackballController->wheelEvent(ev);
-}
-
-void OpenGLWindow::mousePressEvent(QMouseEvent *ev)
-{
-    m_trackballController->mousePressEvent(ev);
-}
-
-void OpenGLWindow::mouseReleaseEvent(QMouseEvent *ev)
-{
-    m_trackballController->mouseReleaseEvent(ev);
-}
-
-void OpenGLWindow::mouseMoveEvent(QMouseEvent *ev)
-{
-    m_trackballController->mouseMoveEvent(size(), ev);
+    return m_trackballCameraController;
 }

@@ -12,13 +12,18 @@
 
 SimulationWindow::SimulationWindow(Simulator *simulator, QWidget *parent) :
     MainWindow(parent)
-  ,m_simulator(simulator)
   ,m_stepSimulationAction(new QAction("Step", this))
   ,m_runSimulationAction(new QAction("Run", this))
   ,m_pauseSimulationAction(new QAction("Pause", this))
   ,m_resetSimulationAction(new QAction("Reset", this))
+  ,m_simulator(simulator)
   ,m_simulatorThread(new QThread(this))
 {
+    //Change simulators thread affinity
+    m_simulator->moveToThread(m_simulatorThread);
+    m_simulatorThread->start();
+
+
     connect(m_stepSimulationAction,
             &QAction::triggered,
             m_simulator,
@@ -40,9 +45,6 @@ SimulationWindow::SimulationWindow(Simulator *simulator, QWidget *parent) :
                                    m_resetSimulationAction,
                                   });
 
-    //Change simulators thread affinity
-    m_simulator->moveToThread(m_simulatorThread);
-    m_simulatorThread->start();
 
     //Initialize the simulator
     m_simulator->init();

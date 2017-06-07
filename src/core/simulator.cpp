@@ -4,7 +4,11 @@ Simulator::Simulator() :
     t(new QTimer(this))
   ,m_isRunning(false)
 {
-    t->setInterval(0);
+    connect(t, &QTimer::timeout,
+            [this]() {
+        this->step(m_dt);
+    });
+    t->setInterval(500);
 }
 
 void Simulator::step()
@@ -16,15 +20,12 @@ void Simulator::run()
 {
     m_isRunning = true;
     t->start();
-    connect(t, &QTimer::timeout,
-            [this]() {
-        this->step(m_dt);
-    });
 }
 
 void Simulator::pause()
 {
     m_isRunning = false;
+
     t->stop();
 }
 

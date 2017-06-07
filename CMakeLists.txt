@@ -1,12 +1,34 @@
-project(QUtils)
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+project(SUtils VERSION 0.1.0)
+set(SUtils_VERSION_ABI 1)
+set(CMAKE_COLOR_MAKEFILE ON)
+
+# Disable in source building
+if( "${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}" )
+  message(FATAL "no in source building allowed." )
+endif()
+
+
+set(CMAKE_CONFIGURATION_TYPES
+    Debug
+    Release
+    RelWithDebInfo
+    MinSizeRel
+    )
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets 3DCore 3DExtras 3DRender)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/Modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/common")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake")
+include(Common)
+
+common_find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets 3DCore 3DExtras 3DRender)
+common_find_package_post()
 
 add_subdirectory(src)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_INSTALL_PREFIX}/lib)
+include(CPackConfig)
 
