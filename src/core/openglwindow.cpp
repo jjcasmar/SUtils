@@ -11,19 +11,21 @@
 #include <Qt3DRender/QLayerFilter>
 #include <Qt3DExtras>
 #include <Qt3DRender>
-#include <Qt3DExtras/QTrackballCameraController>
+//#include <Qt3DExtras/QTrackballCameraController>
 
 OpenGLWindow::OpenGLWindow() :
     Qt3DWindow(),
     m_rootEntity(new Qt3DCore::QEntity),
     m_internalRootEntity(new Qt3DCore::QEntity),
     m_frameAction(new Qt3DLogic::QFrameAction),
-    m_renderCaptureFrameGraph(new Qt3DRender::QRenderCapture),
-    m_trackballCameraController(new Qt3DExtras::QTrackballCameraController(m_internalRootEntity))
+    m_renderCaptureFrameGraph(new Qt3DRender::QRenderCapture)
+//    m_trackballCameraController(new Qt3DExtras::QTrackballCameraController(m_internalRootEntity))
 {
     m_rootEntity->setParent(m_internalRootEntity);
     this->setRootEntity(m_internalRootEntity);
     m_rootEntity->addComponent(m_frameAction);
+
+    renderSettings()->setRenderPolicy(Qt3DRender::QRenderSettings::Always);
 
     //Frame action tick
     connect(m_frameAction, &Qt3DLogic::QFrameAction::triggered,
@@ -61,7 +63,7 @@ OpenGLWindow::OpenGLWindow() :
     backgroundCameraSelector->setCamera(backgroundCamera);
 
     //Camera controller
-    m_trackballCameraController->setCamera(this->camera());
+//    m_trackballCameraController->setCamera(this->camera());
 
     Qt3DRender::QLayer *layer = new Qt3DRender::QLayer;
     layerFilter->addLayer(layer);
@@ -128,7 +130,7 @@ Qt3DCore::QEntity *OpenGLWindow::rootEntity() const
     return m_rootEntity;
 }
 
-Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
-{
-    return m_trackballCameraController;
-}
+//Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
+//{
+//    return m_trackballCameraController;
+//}
