@@ -30,7 +30,7 @@ protected:
     QThread *m_simulatorThread;
 
     // MainWindow interface
-protected slots:
+public slots:
     void startVideo();
     void stopVideo();
 };

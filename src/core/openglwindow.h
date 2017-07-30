@@ -18,7 +18,7 @@ class OpenGLWindow : public Qt3DExtras::Qt3DWindow
 {
     Q_OBJECT
 public:
-    OpenGLWindow();
+    OpenGLWindow(bool offScreenRendering = false);
     ~OpenGLWindow();
 
     void takeImage(const QString &filename);
@@ -42,6 +42,7 @@ protected:
     QMetaObject::Connection *m_renderCaptureReplyConnection;
 
     uint m_imageCounter;
+    bool m_offScreenRendering;
 };
 
 #endif // OPENGLWINDOW_H

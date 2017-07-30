@@ -13,7 +13,7 @@
 #include <Qt3DRender>
 //#include <Qt3DExtras/QTrackballCameraController>
 
-OpenGLWindow::OpenGLWindow() :
+OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     Qt3DWindow(),
     m_rootEntity(new Qt3DCore::QEntity),
     m_internalRootEntity(new Qt3DCore::QEntity),

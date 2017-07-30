@@ -29,7 +29,7 @@ public:
     Qt3DRender::QCamera *sceneCamera() const;
 //    Qt3DExtras::QTrackballCameraController *cameraController() const;
 
-protected slots:
+public slots:
     void takeScreenshot();
     virtual void startVideo();
     virtual void stopVideo();
