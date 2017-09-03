@@ -13,6 +13,7 @@ class QCamera;
 
 namespace Qt3DExtras {
 class QTrackballCameraController;
+class QPlaneGeometry;
 }
 
 class OpenGLWindow;
@@ -28,6 +29,7 @@ public:
     Qt3DCore::QEntity *sceneRootEntity() const;
     Qt3DRender::QCamera *sceneCamera() const;
     Qt3DExtras::QTrackballCameraController *cameraController() const;
+    Qt3DExtras::QPlaneGeometry *floorGeometry() const;
 
 public slots:
     void takeScreenshot();

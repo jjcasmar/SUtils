@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>shaders/robustwireframe.frag</file>
+    <file>shaders/robustwireframe.geom</file>
+    <file>shaders/robustwireframe.vert</file>
+</qresource>
+</RCC>

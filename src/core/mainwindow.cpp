@@ -50,6 +50,11 @@ Qt3DExtras::QTrackballCameraController *MainWindow::cameraController() const
     return m_OpenGLView->trackballCameraController();
 }
 
+Qt3DExtras::QPlaneGeometry *MainWindow::floorGeometry() const
+{
+    return m_OpenGLView->floorGeometry();
+}
+
 //Qt3DExtras::QTrackballCameraController *MainWindow::cameraController() const
 //{
 //    return m_OpenGLView->trackballCameraController();

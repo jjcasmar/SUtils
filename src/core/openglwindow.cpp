@@ -114,6 +114,7 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     floorEntity->addComponent(floorMaterial);
     floorEntity->addComponent(floorTransform);
     dynamic_cast<Qt3DExtras::QPlaneGeometry*>(floorGeometryRenderer->geometry())->setResolution(QSize(20,20));
+    m_floorGeometry = dynamic_cast<Qt3DExtras::QPlaneGeometry*>(floorGeometryRenderer->geometry());
 
     floorTransform->setRotationX(90);
 
@@ -148,6 +149,11 @@ Qt3DCore::QEntity *OpenGLWindow::rootEntity() const
 Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
 {
     return m_trackballCameraController;
+}
+
+Qt3DExtras::QPlaneGeometry *OpenGLWindow::floorGeometry() const
+{
+   return m_floorGeometry;
 }
 
 //Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const

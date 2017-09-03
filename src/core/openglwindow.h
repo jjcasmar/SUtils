@@ -13,6 +13,7 @@ class QRenderCaptureReply;
 namespace Qt3DExtras {
 class QOrbitCameraController;
 class QTrackballCameraController;
+class QPlaneGeometry;
 }
 
 class OpenGLWindow : public Qt3DExtras::Qt3DWindow
@@ -27,6 +28,7 @@ public:
 
     Qt3DCore::QEntity *rootEntity() const;
     Qt3DExtras::QTrackballCameraController *trackballCameraController() const;
+    Qt3DExtras::QPlaneGeometry *floorGeometry() const;
 
 Q_SIGNALS:
     void imageTaken();
@@ -40,6 +42,7 @@ protected:
     Qt3DRender::QRenderCaptureReply *m_renderCaptureReply;
     Qt3DExtras::QOrbitCameraController *m_orbitCameraController;
     Qt3DExtras::QTrackballCameraController *m_trackballCameraController;
+    Qt3DExtras::QPlaneGeometry *m_floorGeometry;
     QMetaObject::Connection *m_renderCaptureReplyConnection;
 
     uint m_imageCounter;

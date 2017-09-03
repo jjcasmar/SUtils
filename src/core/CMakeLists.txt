@@ -6,6 +6,7 @@ set(SUTILS_SOURCES
     simulator.cpp
     trackballcameracontroller.cpp
     wireframematerial.cpp
+    resources.qrc
 )
 
 set(SUTILS_PUBLIC_HEADERS
