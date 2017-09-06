@@ -14,25 +14,27 @@ public:
 
 private:
     typedef Surface::Point CPoint;
-    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> Matrix;
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vector;
+    typedef Eigen::Matrix<double, 3, 1> Vector;
 
 public:
+    TriMesh();
     TriMesh(const std::string &filename);
     TriMesh(const std::vector<Vector> &vertices, const std::vector<unsigned int> &facets);
     TriMesh(const std::vector<Vector> &vertices, const std::vector<Vector> &normals, const std::vector<unsigned int> &facets);
 //    TriMesh(const std::vector<Vector>&vertices, const std::vector<Vector>& normals, const std::vector<Vector> &uv, const std::vector<unsigned int> &facets);
 
-    std::vector<Vector> vertices();
-    std::vector<Vector> normals();
+    std::vector<Vector> points() const;
+    std::vector<Vector> normals() const;
 //    std::vector<Vector> uv();
-    std::vector<unsigned int> facets();
+    std::vector<unsigned int> facets() const;
 
-    template <class T2>
-    std::vector<T2> vertexProperty(const std::string &property);
+    void computeVertexNormals();
 
-    template <class T2>
-    std::vector<T2> facetProperty(const std::string &property);
+//    template <class T2>
+//    std::vector<T2> vertexProperty(const std::string &property);
+
+//    template <class T2>
+//    std::vector<T2> facetProperty(const std::string &property);
 
     Surface *surface() const;
 
