@@ -12,6 +12,7 @@ WireframeMaterial::WireframeMaterial(Qt3DCore::QNode *parent) :
   , m_vertexGL3Shader(new Qt3DRender::QShaderProgram)
   , m_lineWidthParameter(new Qt3DRender::QParameter(QStringLiteral("line.width"), 1.5))
   , m_lineColorParameter(new Qt3DRender::QParameter(QStringLiteral("line.color"), QColor(0,0,0)))
+  , m_cullFaceState(new Qt3DRender::QCullFace)
   , m_filterKey(new Qt3DRender::QFilterKey)
 {
     init();
@@ -34,6 +35,8 @@ void WireframeMaterial::init()
 
     m_vertexGL3Technique->addFilterKey(m_filterKey);
 
+    m_cullFaceState->setMode(Qt3DRender::QCullFace::NoCulling);
+    m_vertexGL3RenderPass->addRenderState(m_cullFaceState);
     m_vertexGL3RenderPass->setShaderProgram(m_vertexGL3Shader);
 
     m_vertexGL3Technique->addRenderPass(m_vertexGL3RenderPass);

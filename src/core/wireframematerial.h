@@ -10,6 +10,7 @@ class QTechnique;
 class QParameter;
 class QShaderProgram;
 class QRenderPass;
+class QCullFace;
 }
 
 class WireframeMaterial : public Qt3DRender::QMaterial
@@ -27,6 +28,7 @@ public:
     Qt3DRender::QShaderProgram *m_vertexGL3Shader;
     Qt3DRender::QParameter *m_lineWidthParameter;
     Qt3DRender::QParameter *m_lineColorParameter;
+    Qt3DRender::QCullFace *m_cullFaceState;
     Qt3DRender::QFilterKey *m_filterKey;
 };
 
