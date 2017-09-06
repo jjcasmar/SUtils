@@ -7,6 +7,7 @@ set(SUTILS_SOURCES
     trackballcameracontroller.cpp
     wireframematerial.cpp
     resources.qrc
+    trimesh.cpp
 )
 
 set(SUTILS_PUBLIC_HEADERS
@@ -17,6 +18,7 @@ set(SUTILS_PUBLIC_HEADERS
     simulator.h
     trackballcameracontroller.h
     wireframematerial.h
+    trimesh.h
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -31,6 +33,8 @@ set(SUTILS_LINK_LIBRARIES
     Qt5::3DCore
     Qt5::3DRender
     Qt5::3DExtras
-    Qt5::3DInput)
+    Qt5::3DInput
+    ${OPENMESH_LIBRARIES}
+    )
 
 common_library(SUtils)
