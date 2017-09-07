@@ -15,7 +15,14 @@ typedef CGAL::Surface_mesh<CPoint> CSurface;
 TriMesh::TriMesh()
     : m_surface(new Surface)
 {
+    computeFaceNormals();
+    computeVertexNormals();
 
+    m_surface->add_property(m_materialPointVPH);
+    m_surface->add_property(m_materialNormalVPH);
+    m_surface->add_property(m_materialNormalFPH);
+    m_surface->add_property(m_deformationGradientFPH);
+    m_surface->add_property(m_areaFPH);
 }
 
 TriMesh::TriMesh(const std::string &filename)
