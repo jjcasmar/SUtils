@@ -383,15 +383,15 @@ void TriMesh::computeAreas()
 
 void TriMesh::refine()
 {
-    CGSurface cgSurface;
+    CSurface cSurface;
     std::vector<VertexIndex> vertexIndexes(m_surface->n_vertices());
 
     auto vBegin = m_surface->vertices_begin();
     auto vEnd = m_surface->vertices_end();
 
     for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
-        OMPoint cPoint
-        CPoint cgP
+        OMPoint cPoint = m_surface->point()
+        CPoint cPoint =
         vertexIndexes[vIt->idx()] =
     }
     cgSurface.add_vertex()
