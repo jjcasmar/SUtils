@@ -45,7 +45,7 @@ TriMesh::TriMesh(const std::string &filename)
     auto fBegin = m_surface->faces_begin();
     auto fEnd = m_surface->faces_end();
     for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
-        m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(fIt);
+        m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
         m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
@@ -58,7 +58,7 @@ TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector
     std::vector<Surface::VertexHandle> vertexHandles(vertices.size());
     for (uint i = 0; i < vertices.size(); ++i) {
         Vector p = vertices[i];
-        vertexHandles[i] = m_surface->add_vertex(CPoint(p[0], p[1], p[2]));
+        vertexHandles[i] = m_surface->add_vertex(OMPoint(p[0], p[1], p[2]));
     }
 
     for (uint i = 0; i < facets.size()/3; ++i) {
@@ -103,7 +103,7 @@ TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector
     auto b = m_surface->vertices_begin();
     auto e = m_surface->vertices_end();
     for (auto i = b; i != e; ++i) {
-        CPoint n; auto v = normals[i->idx()];
+        OMPoint n; auto v = normals[i->idx()];
         n[0] = v[0];
         n[1] = v[1];
         n[2] = v[2];
@@ -193,8 +193,8 @@ void TriMesh::setPoints(const std::vector<TriMesh::Vector> &points)
     for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
         int idx = vIt->idx();
         Vector p = points[idx];
-        CPoint cp(p[0], p[1], p[2]);
-        m_surface->set_point(*vIt, cp);
+        OMPoint omPoint(p[0], p[1], p[2]);
+        m_surface->set_point(*vIt, omPoint);
     }
 }
 
@@ -206,11 +206,11 @@ std::vector<TriMesh::Vector> TriMesh::materialPoints() const
     auto e = m_surface->vertices_end();
 
     for (auto it = i; it != e; ++it) {
-        CPoint cp = m_surface->property(m_materialPointVPH, *it);
+        OMPoint omPoint = m_surface->property(m_materialPointVPH, *it);
         Vector p;
-        p[0] = cp[0];
-        p[1] = cp[1];
-        p[2] = cp[2];
+        p[0] = omPoint[0];
+        p[1] = omPoint[1];
+        p[2] = omPoint[2];
 
         d[it->idx()] = p;
     }
@@ -226,11 +226,11 @@ std::vector<TriMesh::Vector> TriMesh::materialNormals() const
     auto e = m_surface->vertices_end();
 
     for (auto it = i; it != e; ++it) {
-        CPoint cp = m_surface->property(m_materialNormalVPH, *it);
+        OMPoint omPoint = m_surface->property(m_materialNormalVPH, *it);
         Vector p;
-        p[0] = cp[0];
-        p[1] = cp[1];
-        p[2] = cp[2];
+        p[0] = omPoint[0];
+        p[1] = omPoint[1];
+        p[2] = omPoint[2];
 
         d[it->idx()] = p;
     }
@@ -282,14 +282,14 @@ double TriMesh::faceArea(Surface::FaceHandle faceHandle)
 {
     auto cfv_it = m_surface->cfv_begin(faceHandle);
     int idx = 0;
-    CGPoint cgtp[3];
+    CPoint cgtp[3];
 
     for (; cfv_it.is_valid(); ++cfv_it, ++idx) {
-        CPoint p = m_surface->point(*cfv_it);
-        cgtp[idx] = CGPoint(p[0], p[1], p[2]);
+        OMPoint omPoint = m_surface->point(*cfv_it);
+        cgtp[idx] = CPoint(omPoint[0], omPoint[1], omPoint[2]);
     }
 
-    CGTriangle tri(cgtp[0], cgtp[1], cgtp[2]);
+    CTriangle tri(cgtp[0], cgtp[1], cgtp[2]);
 
     return std::sqrt(tri.squared_area());
 }
@@ -298,7 +298,7 @@ std::array<double, 6> TriMesh::dn(Surface::FaceHandle faceHandle)
 {
     auto cfv_it = m_surface->cfv_begin(faceHandle);
 
-    CPoint cp[3];
+    OMPoint cp[3];
     cp[0] = m_surface->point(*cfv_it); cfv_it++;
     cp[1] = m_surface->point(*cfv_it); cfv_it++;
     cp[2] = m_surface->point(*cfv_it); cfv_it++;
@@ -313,7 +313,7 @@ std::array<double, 6> TriMesh::dn(Surface::FaceHandle faceHandle)
     auto m_c = p[2];
 
     std::array<double, 6> dn;
-    double A = m_surface->property(m_areaFPH, faceHandle);
+    double A = 1.0/(2.0*m_surface->property(m_areaFPH, faceHandle));
     dn[0] = A * (m_b[1] - m_c[1]);
     dn[1] = A * (m_c[0] - m_b[0]);
     dn[2] = A * (m_c[1] - m_a[1]);
@@ -341,7 +341,7 @@ void TriMesh::computeDeformationGradients()
     Matrix F;
     F.setZero();
 
-    CPoint m_a, m_b, m_c;
+    OMPoint m_a, m_b, m_c;
 
     auto fBegin = m_surface->faces_begin();
     auto fEnd = m_surface->faces_end();
@@ -383,19 +383,17 @@ void TriMesh::computeAreas()
 
 void TriMesh::refine()
 {
-    CSurface cSurface;
-    std::vector<VertexIndex> vertexIndexes(m_surface->n_vertices());
+//    CSurface cSurface;
+//    std::vector<VertexIndex> vertexIndexes(m_surface->n_vertices());
 
-    auto vBegin = m_surface->vertices_begin();
-    auto vEnd = m_surface->vertices_end();
+//    auto vBegin = m_surface->vertices_begin();
+//    auto vEnd = m_surface->vertices_end();
 
-    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
-        OMPoint cPoint = m_surface->point()
-        CPoint cPoint =
-        vertexIndexes[vIt->idx()] =
-    }
-    cgSurface.add_vertex()
-
+//    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
+//        OMPoint omPoint = m_surface->point()
+//        CPoint cPoint(omPoint[0], omPoint[1], omPoint[2]);
+//        vertexIndexes[vIt->idx()] = cSurface.add_vertex(cPoint);
+//    }
 }
 
 std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const TriMesh::Vector &point, Vector &bCoo)
@@ -406,17 +404,17 @@ std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const T
 
         auto cfv_it = m_surface->cfv_begin(*fIt);
         int idx = 0;
-        CGPoint cgtp[3];
-        CPoint ctp[3];
+        CPoint cgtp[3];
+        OMPoint ctp[3];
         for (; cfv_it.is_valid(); ++cfv_it, ++idx) {
-            CPoint p = m_surface->point(*cfv_it);
+            OMPoint p = m_surface->point(*cfv_it);
             ctp[idx] = p;
-            cgtp[idx] = CGPoint(p[0], p[1], p[2]);
+            cgtp[idx] = CPoint(p[0], p[1], p[2]);
         }
-        CGTriangle tri(cgtp[0], cgtp[1], cgtp[2]);
-        CGPoint p(point[0], point[1], point[2]);
+        CTriangle tri(cgtp[0], cgtp[1], cgtp[2]);
+        CPoint cPoint(point[0], point[1], point[2]);
 
-        if (tri.has_on(p)) {
+        if (tri.has_on(cPoint)) {
             Vector p[3];
             for (int i = 0; i < 3; ++i)
                 for (int j = 0; j < 3; ++j)
