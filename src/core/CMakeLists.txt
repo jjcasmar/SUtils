@@ -35,6 +35,7 @@ set(SUTILS_LINK_LIBRARIES
     Qt5::3DExtras
     Qt5::3DInput
     ${OPENMESH_LIBRARIES}
+    ${CGAL_LIBRARIES}
     )
 
 common_library(SUtils)

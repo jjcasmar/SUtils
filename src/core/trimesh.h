@@ -13,8 +13,9 @@ public:
     typedef OpenMesh::TriMesh_ArrayKernelT<> Surface;
 
 private:
-    typedef Surface::Point CPoint;
+    typedef Surface::Point OMPoint;
     typedef Eigen::Matrix<double, 3, 1> Vector;
+    typedef Eigen::Matrix<double, 3, 3> Matrix;
 
 public:
     TriMesh();
@@ -28,18 +29,39 @@ public:
 //    std::vector<Vector> uv();
     std::vector<unsigned int> facets() const;
 
+    unsigned int nbVertices() const;
+    unsigned int nbFaces() const;
+
+    void setPoints(const std::vector<Vector> &points);
+
+    std::vector<Vector> materialPoints() const;
+    std::vector<Vector> materialNormals() const;
+    std::vector<Matrix> deformationGradients() const;
+    std::vector<double> areas() const;
+
     void computeVertexNormals();
+    void computeDeformationGradients();
+    void computeAreas();
 
-//    template <class T2>
-//    std::vector<T2> vertexProperty(const std::string &property);
+    void refine();
 
-//    template <class T2>
-//    std::vector<T2> facetProperty(const std::string &property);
+    std::pair<unsigned int, Vector> barycentricCoordinates(const Vector &point, Vector &bCoo);
 
     Surface *surface() const;
 
 private:
+    void computeFaceNormals();
+    double faceArea(Surface::FaceHandle faceHandle);
+    std::array<double, 6> dn(Surface::FaceHandle faceHandle);
+
     Surface *m_surface;
+
+    OpenMesh::VPropHandleT<Surface::Point> m_materialPointVPH;
+    OpenMesh::VPropHandleT<Surface::Point> m_materialNormalVPH;
+    OpenMesh::FPropHandleT<Surface::Point> m_materialNormalFPH;
+    OpenMesh::FPropHandleT<Matrix> m_deformationGradientFPH;
+    OpenMesh::FPropHandleT<double> m_areaFPH;
+    OpenMesh::FPropHandleT<std::array<double, 6> > m_dnFPH;
 };
 
 #endif // TRIMESH_H
