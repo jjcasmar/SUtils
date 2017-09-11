@@ -6,6 +6,8 @@
 #include <CGAL/Triangle_3.h>
 #include <CGAL/Point_3.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/polygon_mesh_processing.h>
+#include <CGAL/Polygon_mesh_processing/refine.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Triangle_3<K> CTriangle;
@@ -15,14 +17,15 @@ typedef CGAL::Surface_mesh<CPoint> CSurface;
 TriMesh::TriMesh()
     : m_surface(new Surface)
 {
-    computeFaceNormals();
-    computeVertexNormals();
+    m_surface->request_vertex_normals();
+    m_surface->request_face_normals();
 
     m_surface->add_property(m_materialPointVPH);
     m_surface->add_property(m_materialNormalVPH);
     m_surface->add_property(m_materialNormalFPH);
     m_surface->add_property(m_deformationGradientFPH);
     m_surface->add_property(m_areaFPH);
+    m_surface->add_property(m_dnFPH);
 }
 
 TriMesh::TriMesh(const std::string &filename)
@@ -41,6 +44,7 @@ TriMesh::TriMesh(const std::string &filename)
     m_surface->add_property(m_materialNormalFPH);
     m_surface->add_property(m_deformationGradientFPH);
     m_surface->add_property(m_areaFPH);
+    m_surface->add_property(m_dnFPH);
 
     auto vBegin = m_surface->vertices_begin();
     auto vEnd = m_surface->vertices_end();
@@ -57,6 +61,7 @@ TriMesh::TriMesh(const std::string &filename)
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
     }
+
 }
 
 TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector<unsigned int> &facets)
@@ -390,17 +395,36 @@ void TriMesh::computeAreas()
 
 void TriMesh::refine()
 {
-//    CSurface cSurface;
-//    std::vector<VertexIndex> vertexIndexes(m_surface->n_vertices());
+    CSurface cSurface;
+    std::vector<CSurface::Vertex_index> vertexIndexes(m_surface->n_vertices());
 
-//    auto vBegin = m_surface->vertices_begin();
-//    auto vEnd = m_surface->vertices_end();
+    auto vBegin = m_surface->vertices_begin();
+    auto vEnd = m_surface->vertices_end();
 
-//    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
-//        OMPoint omPoint = m_surface->point()
-//        CPoint cPoint(omPoint[0], omPoint[1], omPoint[2]);
-//        vertexIndexes[vIt->idx()] = cSurface.add_vertex(cPoint);
-//    }
+    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
+        OMPoint omPoint = m_surface->point(*vIt);
+        CPoint cPoint(omPoint[0], omPoint[1], omPoint[2]);
+        vertexIndexes[vIt->idx()] = cSurface.add_vertex(cPoint);
+    }
+
+    auto fBegin = m_surface->faces_begin();
+    auto fEnd = m_surface->faces_end();
+    for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
+        auto cfv_it = m_surface->cfv_begin(*fIt);
+        auto v0 = vertexIndexes[cfv_it->idx()]; cfv_it++;
+        auto v1 = vertexIndexes[cfv_it->idx()]; cfv_it++;
+        auto v2 = vertexIndexes[cfv_it->idx()]; cfv_it++;
+        cSurface.add_face(v0, v1, v2);
+    }
+
+    std::vector<CSurface::Face_index>  new_facets;
+    std::vector<CSurface::Vertex_index> new_vertices;
+    CGAL::Polygon_mesh_processing::isotropic_remeshing(CGAL::faces(cSurface), 0.1, cSurface);
+
+    std::ofstream refined("refine.off");
+    refined << cSurface;
+    refined.close();
+
 }
 
 std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const TriMesh::Vector &point, Vector &bCoo)
