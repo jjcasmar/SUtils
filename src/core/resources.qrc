@@ -1,7 +1,9 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource>
-    <file>shaders/robustwireframe.frag</file>
-    <file>shaders/robustwireframe.geom</file>
-    <file>shaders/robustwireframe.vert</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/robustwireframe.frag</file>
+        <file>shaders/robustwireframe.geom</file>
+        <file>shaders/robustwireframe.vert</file>
+        <file>geometry/gnomon/gnomon.bin</file>
+        <file>geometry/gnomon/gnomon.gltf</file>
+    </qresource>
 </RCC>

@@ -124,6 +124,10 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     forwardRenderer->setParent(m_renderCaptureFrameGraph);
     m_renderCaptureFrameGraph->setParent(framegraph);
     setActiveFrameGraph(framegraph);
+
+    Qt3DRender::QSceneLoader *sceneLoader = new Qt3DRender::QSceneLoader;
+    sceneLoader->setSource(QUrl("qrc:/geometry/gnomon/gnomon.gltf"));
+    m_internalRootEntity->addComponent(sceneLoader);
 }
 
 OpenGLWindow::~OpenGLWindow()
