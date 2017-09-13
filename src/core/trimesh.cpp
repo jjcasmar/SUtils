@@ -123,6 +123,11 @@ TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector
     }
 }
 
+TriMesh::TriMesh(const TriMesh &other)
+{
+    m_surface = other.surface(); //new Surface(other.surface());
+}
+
 //TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector<TriMesh::Vector> &normals, const std::vector<TriMesh::Vector> &uv, const std::vector<unsigned int> &facets) :
 //    TriMesh(vertices, normals, facets)
 //{
@@ -393,7 +398,7 @@ void TriMesh::computeAreas()
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
 }
 
-void TriMesh::refine()
+void TriMesh::refine(double targetEdgeLength)
 {
     CSurface cSurface;
     std::vector<CSurface::Vertex_index> vertexIndexes(m_surface->n_vertices());
@@ -419,12 +424,32 @@ void TriMesh::refine()
 
     std::vector<CSurface::Face_index>  new_facets;
     std::vector<CSurface::Vertex_index> new_vertices;
-    CGAL::Polygon_mesh_processing::isotropic_remeshing(CGAL::faces(cSurface), 0.1, cSurface);
+    CGAL::Polygon_mesh_processing::isotropic_remeshing(CGAL::faces(cSurface), targetEdgeLength, cSurface);
 
-    std::ofstream refined("refine.off");
-    refined << cSurface;
-    refined.close();
+    m_surface->clean();
+    auto cVBegin = cSurface.vertices_begin();
+    auto cVEnd = cSurface.vertices_end();
+    std::vector<Surface::VertexHandle> omVertices(cSurface.num_vertices());
+    unsigned int i = 0;
+    for (auto cVIt = cVBegin;  cVIt != cVEnd; ++cVIt, ++i) {
+        CPoint cPoint = cSurface.point(*cVIt);
+        OMPoint omPoint(cPoint[0], cPoint[1], cPoint[2]);
+        omVertices[i] = m_surface->add_vertex(omPoint);
+    }
 
+    auto cFBegin = cSurface.faces_begin();
+    auto cFEnd = cSurface.faces_end();
+    for (auto cFIt = cFBegin; cFIt != cFEnd; ++cFIt) {
+        CGAL::Vertex_around_face_iterator<CSurface> vbegin, vend;
+        unsigned int vertexIndex[3];
+        unsigned int j = 0;
+        for (boost::tie(vbegin, vend) = cSurface.vertices_around_face(cSurface.halfedge(*cFIt));
+             vbegin != vend;
+             ++vbegin, ++j) {
+            vertexIndex[j] = *vbegin;
+        }
+        m_surface->add_face(omVertices[vertexIndex[0]], omVertices[vertexIndex[1]], omVertices[vertexIndex[2]]);
+    }
 }
 
 std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const TriMesh::Vector &point, Vector &bCoo)

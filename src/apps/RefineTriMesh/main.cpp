@@ -3,6 +3,5 @@
 int main(int argc, char **argv)
 {
     TriMesh mesh("coarseMesh.obj");
-    mesh.refine();
-
+    mesh.refine(0.1);
 }

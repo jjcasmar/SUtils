@@ -2,3 +2,5 @@ build
 *.user
 CMakeLists.txt.user*
 *.autosave
+build*
+CMakeFiles

@@ -22,6 +22,7 @@ public:
     TriMesh(const std::string &filename);
     TriMesh(const std::vector<Vector> &vertices, const std::vector<unsigned int> &facets);
     TriMesh(const std::vector<Vector> &vertices, const std::vector<Vector> &normals, const std::vector<unsigned int> &facets);
+    TriMesh(const TriMesh &other);
 //    TriMesh(const std::vector<Vector>&vertices, const std::vector<Vector>& normals, const std::vector<Vector> &uv, const std::vector<unsigned int> &facets);
 
     std::vector<Vector> points() const;
@@ -43,7 +44,7 @@ public:
     void computeDeformationGradients();
     void computeAreas();
 
-    void refine();
+    void refine(double targetEdgeLength);
 
     std::pair<unsigned int, Vector> barycentricCoordinates(const Vector &point, Vector &bCoo);
 
