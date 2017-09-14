@@ -442,6 +442,9 @@ void TriMesh::refine(double targetEdgeLength)
     for (auto cFIt = cFBegin; cFIt != cFEnd; ++cFIt) {
         CGAL::Vertex_around_face_iterator<CSurface> vbegin, vend;
         unsigned int vertexIndex[3];
+        vertexIndex[0] = 0;
+        vertexIndex[1] = 0;
+        vertexIndex[2] = 0;
         unsigned int j = 0;
         for (boost::tie(vbegin, vend) = cSurface.vertices_around_face(cSurface.halfedge(*cFIt));
              vbegin != vend;
@@ -450,6 +453,26 @@ void TriMesh::refine(double targetEdgeLength)
         }
         m_surface->add_face(omVertices[vertexIndex[0]], omVertices[vertexIndex[1]], omVertices[vertexIndex[2]]);
     }
+
+    computeFaceNormals();
+    computeVertexNormals();
+
+    vBegin = m_surface->vertices_begin();
+    vEnd = m_surface->vertices_end();
+    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
+        m_surface->property(m_materialPointVPH, *vIt) = m_surface->point(*vIt);
+        m_surface->property(m_materialNormalVPH, *vIt) = m_surface->normal(*vIt);
+    }
+
+    fBegin = m_surface->faces_begin();
+    fEnd = m_surface->faces_end();
+    for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
+        m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
+        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
+        m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
+        m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
+    }
+
 }
 
 std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const TriMesh::Vector &point, Vector &bCoo)
