@@ -29,6 +29,7 @@ public:
     Qt3DCore::QEntity *rootEntity() const;
     Qt3DExtras::QTrackballCameraController *trackballCameraController() const;
     Qt3DExtras::QPlaneGeometry *floorGeometry() const;
+    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void imageTaken();

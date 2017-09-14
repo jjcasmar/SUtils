@@ -69,6 +69,11 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     //Camera controller
     m_trackballCameraController->setCamera(this->camera());
     m_trackballCameraController->setParent(m_internalRootEntity);
+    this->camera()->setPosition(QVector3D(1,0,0));
+    this->camera()->setUpVector(QVector3D(0,1,0));
+    this->camera()->setViewCenter(QVector3D(0,0,0));
+//    m_orbitCameraController->setCamera(this->camera());
+//    m_orbitCameraController->setParent(m_internalRootEntity);
 
     Qt3DRender::QLayer *layer = new Qt3DRender::QLayer;
     layerFilter->addLayer(layer);
@@ -124,10 +129,6 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     forwardRenderer->setParent(m_renderCaptureFrameGraph);
     m_renderCaptureFrameGraph->setParent(framegraph);
     setActiveFrameGraph(framegraph);
-
-    Qt3DRender::QSceneLoader *sceneLoader = new Qt3DRender::QSceneLoader;
-    sceneLoader->setSource(QUrl("qrc:/geometry/gnomon/gnomon.gltf"));
-    m_internalRootEntity->addComponent(sceneLoader);
 }
 
 OpenGLWindow::~OpenGLWindow()
@@ -160,7 +161,8 @@ Qt3DExtras::QPlaneGeometry *OpenGLWindow::floorGeometry() const
    return m_floorGeometry;
 }
 
-//Qt3DExtras::QTrackballCameraController *OpenGLWindow::trackballCameraController() const
-//{
-//    return m_trackballCameraController;
-//}
+void OpenGLWindow::resizeEvent(QResizeEvent *ev)
+{
+    m_trackballCameraController->setWindowSize(ev->size());
+    this->camera()->setAspectRatio(float(ev->size().width())/(float)(ev->size().height()));
+}

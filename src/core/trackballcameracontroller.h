@@ -80,7 +80,6 @@ class QT3DEXTRASSHARED_EXPORT QTrackballCameraController : public Qt3DCore::QEnt
     Q_PROPERTY(float rotationSpeed READ rotationSpeed WRITE setRotationSpeed NOTIFY rotationSpeedChanged)
     Q_PROPERTY(float zoomCameraLimit READ zoomCameraLimit WRITE setZoomCameraLimit NOTIFY zoomCameraLimitChanged)
     Q_PROPERTY(float trackballRadius READ trackballRadius WRITE setTrackballRadius NOTIFY trackballRadiusChanged)
-    Q_PROPERTY(QPoint trackballCenter READ trackballCenter WRITE setTrackballCenter NOTIFY trackballCenterChanged)
     Q_PROPERTY(QSize windowSize READ windowSize WRITE setWindowSize NOTIFY windowSizeChanged)
 public:
     explicit QTrackballCameraController(Qt3DCore::QNode *parent = nullptr);
@@ -95,7 +94,6 @@ public:
     float rotationSpeed() const;
     float zoomCameraLimit() const;
     float trackballRadius() const;
-    QPoint trackballCenter() const;
     QSize windowSize() const;
 
     void setPanSpeed(float v);
@@ -103,7 +101,6 @@ public:
     void setRotationSpeed(float v);
     void setZoomCameraLimit(float v);
     void setTrackballRadius(float v);
-    void setTrackballCenter(const QPoint &v);
     void setWindowSize(const QSize &v);
 
 Q_SIGNALS:
@@ -112,18 +109,17 @@ Q_SIGNALS:
     void zoomSpeedChanged();
     void rotationSpeedChanged();
     void zoomCameraLimitChanged();
-    void trackballRadiusChanged();
-    void trackballCenterChanged();
+    void trackballRadiusChanged(float radius);
     void windowSizeChanged();
 
 private:
     void init();
     QQuaternion createRotation(const QPoint &firstPoint,
-                               const QPoint &nextPoint, const QSize &windowSize, const QPoint &trackballCenter,
+                               const QPoint &nextPoint, const QSize &windowSize,
                                float trackballRadius) const;
 
     QVector3D projectScreenToTrackball(const QPoint &screenCoords,
-                                       const QSize &windowSize, const QPoint &trackballCenter,
+                                       const QSize &windowSize,
                                        float trackballRadius) const;
 
 
@@ -161,9 +157,7 @@ private:
     QPoint m_mouseCurrentPosition;
 
     QSize m_windowSize;
-    QPoint m_trackballCenter;
     float m_trackballRadius;
-
 
     //Movement speed control
     float m_panSpeed;

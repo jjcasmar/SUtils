@@ -81,8 +81,7 @@ QTrackballCameraController::QTrackballCameraController(Qt3DCore::QNode *parent):
   , m_logicalDevice(new Qt3DInput::QLogicalDevice())
   , m_frameAction(new Qt3DLogic::QFrameAction())
   , m_windowSize(QSize(1920,1080))
-  , m_trackballCenter(QPoint(0,0))
-  , m_trackballRadius(1.0f)
+  , m_trackballRadius(0.5f)
   , m_panSpeed(1.0)
   , m_zoomSpeed(1.0)
   , m_rotationSpeed(1.0)
@@ -217,13 +216,12 @@ void QTrackballCameraController::init()
 
 QVector3D QTrackballCameraController::projectScreenToTrackball(const QPoint &screenCoords,
                                                                       const QSize &windowSize,
-                                                                      const QPoint &trackballCenter,
                                                                       float trackballRadius) const
 {
-    float normalizeValue = static_cast<float>(qMin(windowSize.width(), windowSize.height()));
-    QVector3D p3D(2*( screenCoords.x()                        - trackballCenter.x())/normalizeValue,
-                  2*((windowSize.height() - screenCoords.y()) - trackballCenter.y())/normalizeValue,
-                  0.0f);
+    QVector2D p2D(2.0*m_camera->aspectRatio()*((float)screenCoords.x()/(float)windowSize.width() - 0.5),
+                  -2.0*((float)screenCoords.y()/(float)windowSize.height() - 0.5));
+
+    QVector3D p3D(p2D, 0);
 
     float r = trackballRadius;
     float z0 = r * 0.5f;
@@ -233,9 +231,6 @@ QVector3D QTrackballCameraController::projectScreenToTrackball(const QPoint &scr
         z = sqrt(r*r - p3D.lengthSquared());
     }
     else {
-        // Original (hyperbolic):
-        // z = r*r / (2 * v.length());
-
         // Consistent (hyperbolic):
         z = z0*std::sqrt(r*r - z0*z0) / p3D.length();
     }
@@ -246,11 +241,10 @@ QVector3D QTrackballCameraController::projectScreenToTrackball(const QPoint &scr
 QQuaternion QTrackballCameraController::createRotation(const QPoint &firstPoint,
                                                               const QPoint &nextPoint,
                                                               const QSize &windowSize,
-                                                              const QPoint &trackballCenter,
                                                               float trackBallRadius) const
 {
-    QVector3D lastPos3D = projectScreenToTrackball(firstPoint, windowSize, trackballCenter, trackBallRadius);
-    QVector3D currentPos3D = projectScreenToTrackball(nextPoint, windowSize, trackballCenter, trackBallRadius);
+    QVector3D lastPos3D = projectScreenToTrackball(firstPoint, windowSize, trackBallRadius);
+    QVector3D currentPos3D = projectScreenToTrackball(nextPoint, windowSize, trackBallRadius);
 
     QVector3D posAvg = (lastPos3D + currentPos3D) / 2;
 
@@ -302,11 +296,6 @@ float QTrackballCameraController::trackballRadius() const
     return this->m_trackballRadius;
 }
 
-QPoint QTrackballCameraController::trackballCenter() const
-{
-    return this->m_trackballCenter;
-}
-
 QSize QTrackballCameraController::windowSize() const
 {
     return this->m_windowSize;
@@ -348,15 +337,7 @@ void QTrackballCameraController::setTrackballRadius(float v)
 {
     if (this->m_trackballRadius != v) {
         this->m_trackballRadius = v;
-        emit trackballRadiusChanged();
-    }
-}
-
-void QTrackballCameraController::setTrackballCenter(const QPoint &v)
-{
-    if (this->m_trackballCenter != v) {
-        this->m_trackballCenter = v;
-        emit trackballCenterChanged();
+        emit trackballRadiusChanged(v);
     }
 }
 
@@ -384,7 +365,6 @@ void QTrackballCameraController::onTriggered(float)
                 QQuaternion rotation = createRotation(m_mouseLastPosition,
                                                       m_mouseCurrentPosition,
                                                       m_windowSize,
-                                                      m_trackballCenter,
                                                       m_trackballRadius);
 
                 QQuaternion currentRotation = m_camera->transform()->rotation();
