@@ -429,28 +429,29 @@ void TriMesh::refine(double targetEdgeLength)
     m_surface->clean();
     auto cVBegin = cSurface.vertices_begin();
     auto cVEnd = cSurface.vertices_end();
-    std::vector<Surface::VertexHandle> omVertices(cSurface.num_vertices());
+    std::map<CSurface::Vertex_index, Surface::VertexHandle> omVertices;
     unsigned int i = 0;
     for (auto cVIt = cVBegin;  cVIt != cVEnd; ++cVIt, ++i) {
         CPoint cPoint = cSurface.point(*cVIt);
         OMPoint omPoint(cPoint[0], cPoint[1], cPoint[2]);
-        omVertices[i] = m_surface->add_vertex(omPoint);
+        omVertices[*cVIt] = m_surface->add_vertex(omPoint);
     }
 
     auto cFBegin = cSurface.faces_begin();
     auto cFEnd = cSurface.faces_end();
     for (auto cFIt = cFBegin; cFIt != cFEnd; ++cFIt) {
         CGAL::Vertex_around_face_iterator<CSurface> vbegin, vend;
-        unsigned int vertexIndex[3];
-        vertexIndex[0] = 0;
-        vertexIndex[1] = 0;
-        vertexIndex[2] = 0;
+        CSurface::Vertex_index vertexIndex[3];
+        vertexIndex[0] = CSurface::Vertex_index();
+        vertexIndex[1] = CSurface::Vertex_index();
+        vertexIndex[2] = CSurface::Vertex_index();
         unsigned int j = 0;
         for (boost::tie(vbegin, vend) = cSurface.vertices_around_face(cSurface.halfedge(*cFIt));
              vbegin != vend;
              ++vbegin, ++j) {
             vertexIndex[j] = *vbegin;
         }
+        std::cout << j << std::endl;
         m_surface->add_face(omVertices[vertexIndex[0]], omVertices[vertexIndex[1]], omVertices[vertexIndex[2]]);
     }
 
@@ -488,12 +489,13 @@ std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const T
         for (; cfv_it.is_valid(); ++cfv_it, ++idx) {
             OMPoint p = m_surface->point(*cfv_it);
             ctp[idx] = p;
-            cgtp[idx] = CPoint(p[0], p[1], p[2]);
+            cgtp[idx] = CPoint(p[0], p[1], 0);
         }
         CTriangle tri(cgtp[0], cgtp[1], cgtp[2]);
-        CPoint cPoint(point[0], point[1], point[2]);
+        CPoint cPoint(point[0], point[1], 0);
 
-        if (tri.has_on(cPoint)) {
+        bool isInTriangle = tri.has_on(cPoint);
+        if (isInTriangle) {
             Vector p[3];
             for (int i = 0; i < 3; ++i)
                 for (int j = 0; j < 3; ++j)

@@ -128,6 +128,15 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     //m_renderCaptureFrameGraph->setParent(forwardRenderer);
     forwardRenderer->setParent(m_renderCaptureFrameGraph);
     m_renderCaptureFrameGraph->setParent(framegraph);
+
+    //Gnomon shit
+    Qt3DRender::QViewport *gnomonViewport = new Qt3DRender::QViewport;
+    Qt3DRender::QClearBuffers *gnomonClearBuffer = new Qt3DRender::QClearBuffers(gnomonViewport);
+    Qt3DRender::QCameraSelector *gnomonCameraSelector = new Qt3DRender::QCameraSelector(gnomonClearBuffer);
+    Qt3DRender::QLayerFilter *gnomonLayerFilter = new Qt3DRender::QLayerFilter(gnomonCameraSelector);
+
+    gnomonClearBuffer->setBuffers(Qt3DRender::QClearBuffers::DepthBuffer);
+
     setActiveFrameGraph(framegraph);
 }
 
