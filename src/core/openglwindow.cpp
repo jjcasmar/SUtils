@@ -130,12 +130,27 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     m_renderCaptureFrameGraph->setParent(framegraph);
 
     //Gnomon shit
-    Qt3DRender::QViewport *gnomonViewport = new Qt3DRender::QViewport;
+    Qt3DRender::QViewport *gnomonViewport = new Qt3DRender::QViewport(framegraph);
     Qt3DRender::QClearBuffers *gnomonClearBuffer = new Qt3DRender::QClearBuffers(gnomonViewport);
     Qt3DRender::QCameraSelector *gnomonCameraSelector = new Qt3DRender::QCameraSelector(gnomonClearBuffer);
-    Qt3DRender::QLayerFilter *gnomonLayerFilter = new Qt3DRender::QLayerFilter(gnomonCameraSelector);
+//    Qt3DRender::QLayerFilter *gnomonLayerFilter = new Qt3DRender::QLayerFilter(gnomonCameraSelector);
 
     gnomonClearBuffer->setBuffers(Qt3DRender::QClearBuffers::DepthBuffer);
+
+    Qt3DRender::QCamera *gnomonCamera = new Qt3DRender::QCamera;
+    Qt3DRender::QMesh *gnomonGeometry = new Qt3DRender::QMesh;
+    Qt3DCore::QTransform *gnomonTransform = new Qt3DCore::QTransform;
+    gnomonGeometry->setSource(QUrl::fromLocalFile("qrc:/geometry/gnomon/gnomon.gltf"));
+    Qt3DExtras::QPerVertexColorMaterial *colorMaterial = new Qt3DExtras::QPerVertexColorMaterial;
+
+    Qt3DCore::QEntity *gnomonEntity = new Qt3DCore::QEntity(m_internalRootEntity);
+    gnomonEntity->addComponent(gnomonGeometry);
+    gnomonEntity->addComponent(gnomonTransform);
+    gnomonEntity->addComponent(colorMaterial);
+    gnomonCamera->setParent(m_internalRootEntity);
+    gnomonCameraSelector->setCamera(gnomonCamera);
+
+
 
     setActiveFrameGraph(framegraph);
 }
