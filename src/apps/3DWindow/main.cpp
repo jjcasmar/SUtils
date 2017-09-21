@@ -4,35 +4,37 @@
 #include <Qt3DRender>
 #include <QDebug>
 
-#include "hwindow.h"
+#include "../../core/cadmaterial.h"
+#include "../../core/trackballcameracontroller.h"
 
 int main(int argc, char **argv) {
 
     QApplication app(argc, argv);
 
+    Qt3DExtras::Qt3DWindow w;
+
     Qt3DCore::QEntity *cubeEntity = new Qt3DCore::QEntity;
-    cubeEntity->addComponent(new Qt3DExtras::QCuboidMesh);
-    auto material = new Qt3DExtras::QPhongMaterial;
-    material->setAmbient(QColor("red"));
+    Qt3DExtras::QCuboidMesh *cubeMesh = new Qt3DExtras::QCuboidMesh;
+    CADMaterial *material = new CADMaterial;
+    material->setMaterialEffects(CADMaterial::Wireframe | CADMaterial::Phong);
+
+    cubeEntity->addComponent(cubeMesh);
     cubeEntity->addComponent(material);
 
-    HWindow *window = new HWindow;
-    HWindow *window2 = new HWindow;
+    Qt3DExtras::QTrackballCameraController *controller = new Qt3DExtras::QTrackballCameraController(cubeEntity);
+    controller->setCamera(w.camera());
+    w.camera()->setPosition(QVector3D(5,0,0));
+    w.camera()->setViewCenter(QVector3D(0,0,0));
+    w.camera()->setUpVector(QVector3D(0,1,0));
 
-    window->setScene(cubeEntity);
-    window2->setScene(cubeEntity);
+    Qt3DRender::QDirectionalLight *light = new Qt3DRender::QDirectionalLight;
+    light->setColor(QColor("white"));
+    w.camera()->addComponent(light);
+    light->setWorldDirection(-w.camera()->position() + w.camera()->viewCenter());
 
-    auto frameAction1 = window->frameAction();
-    auto frameAction2 = window2->frameAction();
-    QObject::connect(frameAction1, &Qt3DLogic::QFrameAction::triggered, window, &HWindow::shutdown);
-    QObject::connect(frameAction1, &Qt3DLogic::QFrameAction::triggered, window2, &HWindow::turnOn);
-    QObject::connect(frameAction2, &Qt3DLogic::QFrameAction::triggered, window2, &HWindow::shutdown);
-    QObject::connect(frameAction2, &Qt3DLogic::QFrameAction::triggered, window, &HWindow::turnOn);
+    w.setRootEntity(cubeEntity);
 
-    window->turnOn();
-//    window2->turnOn();
+    w.show();
 
-    window->show();
-    window2->show();
     return app.exec();
 }

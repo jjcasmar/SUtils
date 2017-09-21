@@ -27,24 +27,24 @@ public:
         m_renderSettings->setActiveFrameGraph(m_framegraph);
         m_rootEntity->addComponent(m_renderSettings);
         m_frameAction->setParent(m_framegraph);
-        m_engine->setRootEntity((Qt3DCore::QEntityPtr)m_rootEntity);
     }
 
 
+    Qt3DRender::QRenderSettings *renderSettings() {return m_renderSettings;}
+    Qt3DRender::QFrameGraphNode *frameGraph() {return m_framegraph;}
     void setScene(Qt3DCore::QEntity *scene) {m_scene = scene;}
     Qt3DCore::QEntity *rootEntity() {return m_rootEntity;}
     Qt3DLogic::QFrameAction *frameAction() {return m_frameAction;}
 
 public Q_SLOTS:
     void shutdown() {
+        m_engine->setRootEntity(Qt3DCore::QEntityPtr());
         m_scene->setParent((Qt3DCore::QNode*)nullptr);
-        m_renderSettings->setActiveFrameGraph(new Qt3DRender::QNoDraw);
-//        m_engine->setRootEntity((Qt3DCore::QEntityPtr)nullptr);
     }
 
     void turnOn() {
         m_scene->setParent(m_rootEntity);
-        m_renderSettings->setActiveFrameGraph(m_framegraph);
+        m_engine->setRootEntity(Qt3DCore::QEntityPtr(m_rootEntity));
     }
 
 public:

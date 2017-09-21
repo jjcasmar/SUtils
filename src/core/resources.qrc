@@ -3,5 +3,9 @@
         <file>shaders/robustwireframe.frag</file>
         <file>shaders/robustwireframe.geom</file>
         <file>shaders/robustwireframe.vert</file>
+        <file>shaders/light.inc.frag</file>
+        <file>shaders/phong.frag</file>
+        <file>shaders/phong.geom</file>
+        <file>shaders/phong.vert</file>
     </qresource>
 </RCC>

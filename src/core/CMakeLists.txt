@@ -8,6 +8,9 @@ set(SUTILS_SOURCES
     wireframematerial.cpp
     resources.qrc
     trimesh.cpp
+    cadmaterial.cpp
+    objectivefunction.cpp
+    objectivefunctionminimizer.cpp
 )
 
 set(SUTILS_PUBLIC_HEADERS
@@ -19,6 +22,9 @@ set(SUTILS_PUBLIC_HEADERS
     trackballcameracontroller.h
     wireframematerial.h
     trimesh.h
+    cadmaterial.h
+    objectivefunction.h
+    objectivefunctionminimizer.h
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -36,6 +42,7 @@ set(SUTILS_LINK_LIBRARIES
     Qt5::3DInput
     ${OPENMESH_LIBRARIES}
     ${CGAL_LIBRARIES}
+    ${NLOPT_LIBRARIES}
     )
 
 common_library(SUtils)
