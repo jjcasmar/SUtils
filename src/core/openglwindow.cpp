@@ -122,6 +122,7 @@ OpenGLWindow::OpenGLWindow(bool /*offScreenRendering*/) :
     m_floorGeometry = dynamic_cast<Qt3DExtras::QPlaneGeometry*>(floorGeometryRenderer->geometry());
 
     floorTransform->setRotationX(90);
+    floorEntity->setEnabled(false);
 
     //Add support for taking images
     //framegraph->setParent(m_renderCaptureFrameGraph);

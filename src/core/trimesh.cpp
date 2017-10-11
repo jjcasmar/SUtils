@@ -1,6 +1,7 @@
 #include "trimesh.h"
 
 #include <Eigen/Dense>
+#include <Eigen/Core>
 #include <limits>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangle_3.h>
@@ -9,10 +10,22 @@
 #include <CGAL/polygon_mesh_processing.h>
 #include <CGAL/Polygon_mesh_processing/refine.h>
 
+#include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include <CGAL/Delaunay_mesh_face_base_2.h>
+#include <CGAL/Delaunay_mesh_size_criteria_2.h>
+#include <CGAL/Delaunay_mesher_2.h>
+
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Triangle_3<K> CTriangle;
 typedef CGAL::Point_3<K> CPoint;
 typedef CGAL::Surface_mesh<CPoint> CSurface;
+
+typedef CGAL::Triangulation_vertex_base_2<K> Vb;
+typedef CGAL::Delaunay_mesh_face_base_2<K> Fb;
+typedef CGAL::Triangulation_data_structure_2<Vb, Fb> Tds;
+typedef CGAL::Constrained_Delaunay_triangulation_2<K, Tds> CDT;
+typedef CGAL::Delaunay_mesh_size_criteria_2<CDT> Criteria;
+typedef CDT::Point CDTPoint;
 
 TriMesh::TriMesh()
     : m_surface(new Surface)
@@ -67,46 +80,7 @@ TriMesh::TriMesh(const std::string &filename)
 TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector<unsigned int> &facets)
     : m_surface(new Surface)
 {
-    std::vector<Surface::VertexHandle> vertexHandles(vertices.size());
-    for (uint i = 0; i < vertices.size(); ++i) {
-        Vector p = vertices[i];
-        vertexHandles[i] = m_surface->add_vertex(OMPoint(p[0], p[1], p[2]));
-    }
-
-    for (uint i = 0; i < facets.size()/3; ++i) {
-        m_surface->add_face(vertexHandles[facets[3*i+0]],
-                vertexHandles[facets[3*i+1]],
-                vertexHandles[facets[3*i+2]]);
-    }
-
-    m_surface->request_vertex_normals();
-    m_surface->request_face_normals();
-
-    computeFaceNormals();
-    computeVertexNormals();
-
-    m_surface->add_property(m_materialPointVPH);
-    m_surface->add_property(m_materialNormalVPH);
-    m_surface->add_property(m_materialNormalFPH);
-    m_surface->add_property(m_deformationGradientFPH);
-    m_surface->add_property(m_areaFPH);
-    m_surface->add_property(m_dnFPH);
-
-    auto vBegin = m_surface->vertices_begin();
-    auto vEnd = m_surface->vertices_end();
-    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
-        m_surface->property(m_materialPointVPH, *vIt) = m_surface->point(*vIt);
-        m_surface->property(m_materialNormalVPH, *vIt) = m_surface->normal(*vIt);
-    }
-
-    auto fBegin = m_surface->faces_begin();
-    auto fEnd = m_surface->faces_end();
-    for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
-        m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
-        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
-        m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
-        m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
-    }
+    initFromPointsAndFacets(vertices, facets);
 }
 
 TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector<TriMesh::Vector> &normals, const std::vector<unsigned int> &facets) :
@@ -125,7 +99,48 @@ TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector
 
 TriMesh::TriMesh(const TriMesh &other)
 {
-    m_surface = other.surface(); //new Surface(other.surface());
+    m_surface = new Surface(*other.surface());
+}
+
+TriMesh::TriMesh(const std::vector<TriMesh::Vector2> &vertices, const std::vector<unsigned int> &edges, double aspect, double size)
+    : m_surface(new Surface)
+{
+    CDT cdt;
+    std::vector<CDTPoint> cdtPoints;
+    cdtPoints.reserve(vertices.size());
+    for (const Vector2 &vertex : vertices) {
+        cdtPoints.push_back(CDTPoint(vertex(0), vertex(1)));
+    }
+
+    for (uint i = 0; i < edges.size()/2; ++i) {
+        cdt.insert_constraint(cdtPoints[edges[2*i+0]], cdtPoints[edges[2*i+1]]);
+    }
+
+    CGAL::refine_Delaunay_mesh_2(cdt, Criteria(aspect, size));
+
+    const auto vIt = cdt.vertices_begin();
+    const auto vEnd = cdt.vertices_end();
+    std::vector<Vector> points;
+    std::map<CDT::Vertex_handle, uint> vertexHandles;
+    points.reserve(cdt.number_of_vertices());
+    uint index = 0;
+    for (auto it = vIt; it != vEnd; ++it) {
+        points.push_back(Vector(it->point()[0], it->point()[1], 0));
+        vertexHandles[it->handle()] = index;
+        index++;
+    }
+
+    const auto fIt = cdt.faces_begin();
+    const auto fEnd = cdt.faces_end();
+    std::vector<unsigned int> facets;
+    facets.reserve(3*cdt.number_of_faces());
+    for (auto it = fIt; it != fEnd; ++it) {
+        facets.push_back(vertexHandles[it->vertex(0)->handle()]);
+        facets.push_back(vertexHandles[it->vertex(1)->handle()]);
+        facets.push_back(vertexHandles[it->vertex(2)->handle()]);
+    }
+
+    initFromPointsAndFacets(points, facets);
 }
 
 //TriMesh::TriMesh(const std::vector<TriMesh::Vector> &vertices, const std::vector<TriMesh::Vector> &normals, const std::vector<TriMesh::Vector> &uv, const std::vector<unsigned int> &facets) :
@@ -300,10 +315,11 @@ double TriMesh::faceArea(Surface::FaceHandle faceHandle)
     auto cfv_it = m_surface->cfv_begin(faceHandle);
     int idx = 0;
     CPoint cgtp[3];
+    OMPoint p[3];
 
     for (; cfv_it.is_valid(); ++cfv_it, ++idx) {
-        OMPoint omPoint = m_surface->point(*cfv_it);
-        cgtp[idx] = CPoint(omPoint[0], omPoint[1], omPoint[2]);
+        p[idx] = m_surface->point(*cfv_it);
+        cgtp[idx] = CPoint(p[idx][0], p[idx][1], p[idx][2]);
     }
 
     CTriangle tri(cgtp[0], cgtp[1], cgtp[2]);
@@ -362,13 +378,23 @@ void TriMesh::computeDeformationGradients()
 
     auto fBegin = m_surface->faces_begin();
     auto fEnd = m_surface->faces_end();
+//    auto f = 0;
     for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
         auto cfv_it = m_surface->cfv_begin(*fIt);
         m_a = m_surface->point(*cfv_it); cfv_it++;
         m_b = m_surface->point(*cfv_it); cfv_it++;
         m_c = m_surface->point(*cfv_it); cfv_it++;
 
-        std::array<double, 6> dn = m_surface->property(m_dnFPH, *fIt);
+////    double A = 1.0/(2.0*faceArea(*fIt));
+////    double dN1dx = A * (m_b[1] - m_c[1]);
+////    double dN1dy = A * (m_c[0] - m_b[0]);
+////    double dN2dx = A * (m_c[1] - m_a[1]);
+////    double dN2dy = A * (m_a[0] - m_c[0]);
+////    double dN3dx = A * (m_a[1] - m_b[1]);
+////    double dN3dy = A * (m_b[0] - m_a[0]);
+
+        std::array<double, 6> dn;
+        dn = m_surface->property(m_dnFPH, *fIt);
         double dN1dx = dn[0];
         double dN1dy = dn[1];
         double dN2dx = dn[2];
@@ -383,9 +409,22 @@ void TriMesh::computeDeformationGradients()
         Vector vx = F.block<3,1>(0,0);
         Vector vy = F.block<3,1>(0,1);
         Vector vz = vx.cross(vy);
-        vz.normalize();
+        //        vz.normalize();
         F.block<3,1>(0,2) = vz;
 
+//        Vector x0 = Vector(m_a[0], m_a[1], m_a[2]);
+//        Vector x1 = Vector(m_b[0], m_b[1], m_b[2]);
+//        Vector x2 = Vector(m_c[0], m_c[1], m_c[2]);
+
+//        Vector U = x0*m_membrane_ru(f,0) + x1*m_membrane_ru(f,1) + x2*m_membrane_ru(f,2);
+//        Vector V = x0*m_membrane_rv(f,0) + x1*m_membrane_rv(f,1) + x2*m_membrane_rv(f,2);
+//        Vector Z = U.cross(V);
+
+//        F.block<3,1>(0,0) = U;
+//        F.block<3,1>(0,1) = V;
+//        F.block<3,1>(0,2) = Z;
+
+//        f++;
         m_surface->property(m_deformationGradientFPH, *fIt) = F;
     }
 }
@@ -522,4 +561,74 @@ std::pair<unsigned int, TriMesh::Vector> TriMesh::barycentricCoordinates(const T
 TriMesh::Surface *TriMesh::surface() const
 {
     return m_surface;
+}
+
+void TriMesh::initFromPointsAndFacets(const std::vector<TriMesh::Vector> &points, const std::vector<unsigned int> &facets)
+{
+    std::vector<Surface::VertexHandle> vertexHandles(points.size());
+    for (uint i = 0; i < points.size(); ++i) {
+        Vector p = points[i];
+        vertexHandles[i] = m_surface->add_vertex(OMPoint(p[0], p[1], p[2]));
+    }
+
+    for (uint i = 0; i < facets.size()/3; ++i) {
+        m_surface->add_face(vertexHandles[facets[3*i+0]],
+                vertexHandles[facets[3*i+1]],
+                vertexHandles[facets[3*i+2]]);
+    }
+
+    m_surface->request_vertex_normals();
+    m_surface->request_face_normals();
+
+    computeFaceNormals();
+    computeVertexNormals();
+
+    m_surface->add_property(m_materialPointVPH);
+    m_surface->add_property(m_materialNormalVPH);
+    m_surface->add_property(m_materialNormalFPH);
+    m_surface->add_property(m_deformationGradientFPH);
+    m_surface->add_property(m_areaFPH);
+    m_surface->add_property(m_dnFPH);
+
+    auto vBegin = m_surface->vertices_begin();
+    auto vEnd = m_surface->vertices_end();
+    for (auto vIt = vBegin; vIt != vEnd; ++vIt) {
+        m_surface->property(m_materialPointVPH, *vIt) = m_surface->point(*vIt);
+        m_surface->property(m_materialNormalVPH, *vIt) = m_surface->normal(*vIt);
+    }
+
+    auto fBegin = m_surface->faces_begin();
+    auto fEnd = m_surface->faces_end();
+    for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
+        m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
+        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
+        m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
+        m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
+    }
+
+    auto f = 0;
+    m_membrane_ru.resize(m_surface->n_faces(), 3);
+    m_membrane_rv.resize(m_surface->n_faces(), 3);
+    for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
+        auto cfvIt = m_surface->cfv_begin(*fIt);
+        OMPoint x0 = m_surface->point(*cfvIt); cfvIt++;
+        OMPoint x1 = m_surface->point(*cfvIt); cfvIt++;
+        OMPoint x2 = m_surface->point(*cfvIt); cfvIt++;
+
+        Surface::Normal normal = m_surface->property(m_materialNormalFPH, *fIt);
+
+        //Define (u,v) coords by LOCALLY rotating the triangle to align it with the Z axis
+        Eigen::Quaterniond rot = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(normal[0], normal[1], normal[2]), Vector::UnitZ());
+
+        // compute uv of each vertex
+        Vector2 uvi = Vector2::Zero();
+        Vector2 uvj = (rot * (Vector(x1[0], x1[1], x1[2]) - Vector(x0[0], x0[1], x0[2]))).block(0,0,2,1);
+        Vector2 uvk = (rot * (Vector(x2[0], x2[1], x2[2]) - Vector(x0[0], x0[1], x0[2]))).block(0,0,2,1);
+
+        //Determine vertex weights for strain computation
+        double dinv = 1./(uvi(0) * (uvj(1) - uvk(1)) + uvj(0) * (uvk(1) - uvi(1)) + uvk(0) * (uvi(1) - uvj(1)));
+        m_membrane_ru.row(f) << dinv * (uvj(1) - uvk(1)), dinv * (uvk(1) - uvi(1)), dinv * (uvi(1) - uvj(1));
+        m_membrane_rv.row(f) << dinv * (uvk(0) - uvj(0)), dinv * (uvi(0) - uvk(0)), dinv * (uvj(0) - uvi(0));
+        f++;
+    }
 }

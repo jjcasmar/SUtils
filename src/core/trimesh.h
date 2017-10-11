@@ -15,6 +15,7 @@ public:
 private:
     typedef Surface::Point OMPoint;
     typedef Eigen::Matrix<double, 3, 1> Vector;
+    typedef Eigen::Matrix<double, 2, 1> Vector2;
     typedef Eigen::Matrix<double, 3, 3> Matrix;
 
 public:
@@ -23,6 +24,7 @@ public:
     TriMesh(const std::vector<Vector> &vertices, const std::vector<unsigned int> &facets);
     TriMesh(const std::vector<Vector> &vertices, const std::vector<Vector> &normals, const std::vector<unsigned int> &facets);
     TriMesh(const TriMesh &other);
+    TriMesh(const std::vector<Vector2> &vertices, const std::vector<unsigned int> &edges, double aspect, double size);
 //    TriMesh(const std::vector<Vector>&vertices, const std::vector<Vector>& normals, const std::vector<Vector> &uv, const std::vector<unsigned int> &facets);
 
     std::vector<Vector> points() const;
@@ -51,11 +53,16 @@ public:
     Surface *surface() const;
 
 private:
+    void initFromPointsAndFacets(const std::vector<Vector> &points, const std::vector<unsigned int> &facets);
+
     void computeFaceNormals();
     double faceArea(Surface::FaceHandle faceHandle);
     std::array<double, 6> dn(Surface::FaceHandle faceHandle);
 
     Surface *m_surface;
+
+    Eigen::MatrixXd m_membrane_ru;
+    Eigen::MatrixXd m_membrane_rv;
 
     OpenMesh::VPropHandleT<Surface::Point> m_materialPointVPH;
     OpenMesh::VPropHandleT<Surface::Point> m_materialNormalVPH;

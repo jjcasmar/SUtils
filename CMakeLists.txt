@@ -29,7 +29,7 @@ common_find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets 3DCore 3DExtras 3DR
 common_find_package(OpenMesh REQUIRED SYSTEM)
 common_find_package(Eigen3 REQUIRED SYSTEM)
 common_find_package(CGAL REQUIRED SYSTEM)
-common_find_package(NLOPT REQUIRED SYSTEM)
+#common_find_package(NLOPT REQUIRED SYSTEM)
 
 common_find_package_post()
 
