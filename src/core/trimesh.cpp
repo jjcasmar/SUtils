@@ -39,6 +39,8 @@ TriMesh::TriMesh()
     m_surface->add_property(m_deformationGradientFPH);
     m_surface->add_property(m_areaFPH);
     m_surface->add_property(m_dnFPH);
+    m_surface->add_property(m_dMFPH);
+    m_surface->add_property(m_bendingEPH);
 }
 
 TriMesh::TriMesh(const std::string &filename)
@@ -58,6 +60,8 @@ TriMesh::TriMesh(const std::string &filename)
     m_surface->add_property(m_deformationGradientFPH);
     m_surface->add_property(m_areaFPH);
     m_surface->add_property(m_dnFPH);
+    m_surface->add_property(m_dMFPH);
+    m_surface->add_property(m_bendingEPH);
 
     auto vBegin = m_surface->vertices_begin();
     auto vEnd = m_surface->vertices_end();
@@ -285,6 +289,21 @@ std::vector<TriMesh::Matrix> TriMesh::deformationGradients() const
     return d;
 }
 
+std::vector<TriMesh::Matrix2> TriMesh::dm() const
+{
+    std::vector<Matrix2> d(m_surface->n_faces());
+
+    auto i = m_surface->faces_begin();
+    auto e = m_surface->faces_end();
+
+    for (auto it = i; it != e; ++it) {
+        Matrix2 m = m_surface->property(m_dMFPH, *it);
+        d[it->idx()] = m;
+    }
+
+    return d;
+}
+
 std::vector<double> TriMesh::areas() const
 {
     std::vector<double> d(m_surface->n_faces());
@@ -294,6 +313,23 @@ std::vector<double> TriMesh::areas() const
 
     for (auto it = i; it != e; ++it) {
         double m = m_surface->property(m_areaFPH, *it);
+        d[it->idx()] = m;
+    }
+
+    return d;
+}
+
+std::vector<double> TriMesh::edgesBending() const
+{
+    std::vector<double> d(m_surface->n_edges());
+
+    auto i = m_surface->edges_begin();
+    auto e = m_surface->edges_end();
+
+    for (auto it = i; it != e; ++it) {
+        if (m_surface->is_boundary(*it))
+                continue;
+        double m = m_surface->property(m_bendingEPH, *it);
         d[it->idx()] = m;
     }
 
@@ -357,6 +393,47 @@ std::array<double, 6> TriMesh::dn(Surface::FaceHandle faceHandle)
     return dn;
 }
 
+double TriMesh::bending(Surface::EdgeHandle edgeHandle)
+{
+    OMPoint omPoints[4];
+
+    // Get the edge face0
+    auto halfedge0 = m_surface->halfedge_handle(edgeHandle, 0);
+    auto halfedge1 = m_surface->halfedge_handle(edgeHandle, 1);
+    omPoints[1] = m_surface->point(m_surface->to_vertex_handle(halfedge0));
+    omPoints[2] = m_surface->point(m_surface->to_vertex_handle(halfedge1));
+
+    halfedge0 = m_surface->next_halfedge_handle(halfedge0);
+    halfedge1 = m_surface->next_halfedge_handle(halfedge1);
+
+    omPoints[0] = m_surface->point(m_surface->to_vertex_handle(halfedge0));
+    omPoints[3] = m_surface->point(m_surface->to_vertex_handle(halfedge1));
+
+    OMPoint ompe0 = omPoints[2] - omPoints[1];
+    OMPoint ompe1 = omPoints[0] - omPoints[2];
+    OMPoint ompe1_tilde = omPoints[3] - omPoints[1];
+
+    Vector e0;
+    e0 << ompe0[0], ompe0[1], ompe0[2];
+    Vector e1;
+    e1 << ompe1[0], ompe1[1], ompe0[2];
+    Vector e1_tilde;
+    e1_tilde << ompe1_tilde[0], ompe1_tilde[1], ompe1_tilde[2];
+
+    Vector n = e0.cross(e1);
+    double n_length = n.norm();
+    Vector n_tilde = -e0.cross(e1_tilde);
+    double n_tilde_length = n_tilde.norm();
+    n /= n_length;
+    n_tilde /= n_tilde_length;
+
+    double tan_half_theta = (n - n_tilde).norm()/(n + n_tilde).norm();
+    double sign_angle = n.cross(n_tilde).dot(e0);
+    if (std::isnan(sign_angle)) sign_angle = 1.;
+    else sign_angle = sign_angle > 0 ? 1. : -1.;
+    return 2.*sign_angle*tan_half_theta;
+}
+
 void TriMesh::computeVertexNormals()
 {
     computeFaceNormals();
@@ -385,47 +462,34 @@ void TriMesh::computeDeformationGradients()
         m_b = m_surface->point(*cfv_it); cfv_it++;
         m_c = m_surface->point(*cfv_it); cfv_it++;
 
-////    double A = 1.0/(2.0*faceArea(*fIt));
-////    double dN1dx = A * (m_b[1] - m_c[1]);
-////    double dN1dy = A * (m_c[0] - m_b[0]);
-////    double dN2dx = A * (m_c[1] - m_a[1]);
-////    double dN2dy = A * (m_a[0] - m_c[0]);
-////    double dN3dx = A * (m_a[1] - m_b[1]);
-////    double dN3dy = A * (m_b[0] - m_a[0]);
+        // Other way
+        Eigen::Matrix<double,3,2> Ds;
+        Matrix2 Dm;
+        Dm = m_surface->property(m_dMFPH, *fIt);
+        Ds << m_a[0] - m_c[0], m_b[0] - m_c[0], m_a[1] - m_c[1], m_b[1] - m_c[1], m_a[2] - m_c[2], m_b[2] - m_c[2];
 
-        std::array<double, 6> dn;
-        dn = m_surface->property(m_dnFPH, *fIt);
-        double dN1dx = dn[0];
-        double dN1dy = dn[1];
-        double dN2dx = dn[2];
-        double dN2dy = dn[3];
-        double dN3dx = dn[4];
-        double dN3dy = dn[5];
-
-        F << dN1dx*m_a[0] + dN2dx*m_b[0] + dN3dx*m_c[0], dN1dy*m_a[0] + dN2dy*m_b[0] + dN3dy*m_c[0], 0,
-                dN1dx*m_a[1] + dN2dx*m_b[1] + dN3dx*m_c[1], dN1dy*m_a[1] + dN2dy*m_b[1] + dN3dy*m_c[1], 0,
-                dN1dx*m_a[2] + dN2dx*m_b[2] + dN3dx*m_c[2], dN1dy*m_a[2] + dN2dy*m_b[2] + dN3dy*m_c[2], 0;
+        F.block<3,2>(0,0) = Ds*Dm;
 
         Vector vx = F.block<3,1>(0,0);
         Vector vy = F.block<3,1>(0,1);
         Vector vz = vx.cross(vy);
-        //        vz.normalize();
+
         F.block<3,1>(0,2) = vz;
 
-//        Vector x0 = Vector(m_a[0], m_a[1], m_a[2]);
-//        Vector x1 = Vector(m_b[0], m_b[1], m_b[2]);
-//        Vector x2 = Vector(m_c[0], m_c[1], m_c[2]);
-
-//        Vector U = x0*m_membrane_ru(f,0) + x1*m_membrane_ru(f,1) + x2*m_membrane_ru(f,2);
-//        Vector V = x0*m_membrane_rv(f,0) + x1*m_membrane_rv(f,1) + x2*m_membrane_rv(f,2);
-//        Vector Z = U.cross(V);
-
-//        F.block<3,1>(0,0) = U;
-//        F.block<3,1>(0,1) = V;
-//        F.block<3,1>(0,2) = Z;
-
-//        f++;
         m_surface->property(m_deformationGradientFPH, *fIt) = F;
+    }
+}
+
+void TriMesh::computeEdgeBending()
+{
+    auto eBegin = m_surface->edges_begin();
+    auto eEnd = m_surface->edges_end();
+    auto eIt = eBegin;
+
+    for (; eIt != eEnd; ++eIt){
+        if (m_surface->is_boundary(*eIt))
+            continue;
+        m_surface->property(m_bendingEPH, *eIt) = bending(*eIt);
     }
 }
 
@@ -589,6 +653,8 @@ void TriMesh::initFromPointsAndFacets(const std::vector<TriMesh::Vector> &points
     m_surface->add_property(m_deformationGradientFPH);
     m_surface->add_property(m_areaFPH);
     m_surface->add_property(m_dnFPH);
+    m_surface->add_property(m_dMFPH);
+    m_surface->add_property(m_bendingEPH);
 
     auto vBegin = m_surface->vertices_begin();
     auto vEnd = m_surface->vertices_end();
@@ -604,31 +670,17 @@ void TriMesh::initFromPointsAndFacets(const std::vector<TriMesh::Vector> &points
         m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
-    }
 
-    auto f = 0;
-    m_membrane_ru.resize(m_surface->n_faces(), 3);
-    m_membrane_rv.resize(m_surface->n_faces(), 3);
-    for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
-        auto cfvIt = m_surface->cfv_begin(*fIt);
-        OMPoint x0 = m_surface->point(*cfvIt); cfvIt++;
-        OMPoint x1 = m_surface->point(*cfvIt); cfvIt++;
-        OMPoint x2 = m_surface->point(*cfvIt); cfvIt++;
+        Matrix2 Dm;
+        auto cfv_it = m_surface->cfv_begin(*fIt);
+        OMPoint cp[3];
+        cp[0] = m_surface->point(*cfv_it); cfv_it++;
+        cp[1] = m_surface->point(*cfv_it); cfv_it++;
+        cp[2] = m_surface->point(*cfv_it); cfv_it++;
 
-        Surface::Normal normal = m_surface->property(m_materialNormalFPH, *fIt);
+        Dm << cp[0][0] - cp[2][0], cp[1][0] - cp[2][0],
+                     cp[0][1] - cp[2][1], cp[1][1] - cp[2][1];
 
-        //Define (u,v) coords by LOCALLY rotating the triangle to align it with the Z axis
-        Eigen::Quaterniond rot = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(normal[0], normal[1], normal[2]), Vector::UnitZ());
-
-        // compute uv of each vertex
-        Vector2 uvi = Vector2::Zero();
-        Vector2 uvj = (rot * (Vector(x1[0], x1[1], x1[2]) - Vector(x0[0], x0[1], x0[2]))).block(0,0,2,1);
-        Vector2 uvk = (rot * (Vector(x2[0], x2[1], x2[2]) - Vector(x0[0], x0[1], x0[2]))).block(0,0,2,1);
-
-        //Determine vertex weights for strain computation
-        double dinv = 1./(uvi(0) * (uvj(1) - uvk(1)) + uvj(0) * (uvk(1) - uvi(1)) + uvk(0) * (uvi(1) - uvj(1)));
-        m_membrane_ru.row(f) << dinv * (uvj(1) - uvk(1)), dinv * (uvk(1) - uvi(1)), dinv * (uvi(1) - uvj(1));
-        m_membrane_rv.row(f) << dinv * (uvk(0) - uvj(0)), dinv * (uvi(0) - uvk(0)), dinv * (uvj(0) - uvi(0));
-        f++;
+        m_surface->property(m_dMFPH, *fIt) = Dm.inverse();
     }
 }

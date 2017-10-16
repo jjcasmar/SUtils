@@ -17,6 +17,7 @@ private:
     typedef Eigen::Matrix<double, 3, 1> Vector;
     typedef Eigen::Matrix<double, 2, 1> Vector2;
     typedef Eigen::Matrix<double, 3, 3> Matrix;
+    typedef Eigen::Matrix<double, 2, 2> Matrix2;
 
 public:
     TriMesh();
@@ -40,10 +41,13 @@ public:
     std::vector<Vector> materialPoints() const;
     std::vector<Vector> materialNormals() const;
     std::vector<Matrix> deformationGradients() const;
+    std::vector<Matrix2> dm() const;
     std::vector<double> areas() const;
+    std::vector<double> edgesBending() const;
 
     void computeVertexNormals();
     void computeDeformationGradients();
+    void computeEdgeBending();
     void computeAreas();
 
     void refine(double targetEdgeLength);
@@ -58,6 +62,7 @@ private:
     void computeFaceNormals();
     double faceArea(Surface::FaceHandle faceHandle);
     std::array<double, 6> dn(Surface::FaceHandle faceHandle);
+    double bending(Surface::EdgeHandle edgeHandle);
 
     Surface *m_surface;
 
@@ -70,6 +75,8 @@ private:
     OpenMesh::FPropHandleT<Matrix> m_deformationGradientFPH;
     OpenMesh::FPropHandleT<double> m_areaFPH;
     OpenMesh::FPropHandleT<std::array<double, 6> > m_dnFPH;
+    OpenMesh::FPropHandleT<Matrix2> m_dMFPH;
+    OpenMesh::EPropHandleT<double> m_bendingEPH;
 };
 
 #endif // TRIMESH_H
