@@ -336,6 +336,21 @@ std::vector<double> TriMesh::edgesBending() const
     return d;
 }
 
+std::vector<Eigen::Matrix<double, 3, 2> > TriMesh::restPoseInverseMatrix() const
+{
+    std::vector<Eigen::Matrix<double, 3, 2> > d(m_surface->n_faces());
+
+    auto i = m_surface->faces_begin();
+    auto e = m_surface->faces_end();
+
+    for (auto it = i; it != e; ++it) {
+        Eigen::Matrix<double, 3, 2> m = m_surface->property(m_restPoseMatrixFPH, *it);
+        d[it->idx()] = m;
+    }
+
+    return d;
+}
+
 void TriMesh::computeFaceNormals()
 {
     auto fb = m_surface->faces_begin();
@@ -462,17 +477,17 @@ void TriMesh::computeDeformationGradients()
         m_b = m_surface->point(*cfv_it); cfv_it++;
         m_c = m_surface->point(*cfv_it); cfv_it++;
 
-        // Other way
-        Eigen::Matrix<double,3,2> Ds;
-        Matrix2 Dm;
-        Dm = m_surface->property(m_dMFPH, *fIt);
-        Ds << m_a[0] - m_c[0], m_b[0] - m_c[0], m_a[1] - m_c[1], m_b[1] - m_c[1], m_a[2] - m_c[2], m_b[2] - m_c[2];
+        Matrix poseMatrix;
+        poseMatrix << m_a[0], m_b[0], m_c[0],
+                m_a[1], m_b[1], m_c[1],
+                m_a[2], m_b[2], m_c[2];
 
-        F.block<3,2>(0,0) = Ds*Dm;
+        F.setZero();
+        F.block<3,2>(0,0) = poseMatrix*m_surface->property(m_restPoseMatrixFPH, *fIt);
 
-        Vector vx = F.block<3,1>(0,0);
-        Vector vy = F.block<3,1>(0,1);
-        Vector vz = vx.cross(vy);
+        const Vector vx = F.block<3,1>(0,0);
+        const Vector vy = F.block<3,1>(0,1);
+        const Vector vz = vx.cross(vy);
 
         F.block<3,1>(0,2) = vz;
 
@@ -655,6 +670,7 @@ void TriMesh::initFromPointsAndFacets(const std::vector<TriMesh::Vector> &points
     m_surface->add_property(m_dnFPH);
     m_surface->add_property(m_dMFPH);
     m_surface->add_property(m_bendingEPH);
+    m_surface->add_property(m_restPoseMatrixFPH);
 
     auto vBegin = m_surface->vertices_begin();
     auto vEnd = m_surface->vertices_end();
@@ -671,16 +687,17 @@ void TriMesh::initFromPointsAndFacets(const std::vector<TriMesh::Vector> &points
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
 
-        Matrix2 Dm;
         auto cfv_it = m_surface->cfv_begin(*fIt);
         OMPoint cp[3];
         cp[0] = m_surface->point(*cfv_it); cfv_it++;
         cp[1] = m_surface->point(*cfv_it); cfv_it++;
         cp[2] = m_surface->point(*cfv_it); cfv_it++;
 
-        Dm << cp[0][0] - cp[2][0], cp[1][0] - cp[2][0],
-                     cp[0][1] - cp[2][1], cp[1][1] - cp[2][1];
+        Matrix restPoseMatrix;
+        restPoseMatrix << cp[0][0], cp[0][1], 1,
+                cp[1][0], cp[1][1], 1,
+                cp[2][0], cp[2][1], 1;
 
-        m_surface->property(m_dMFPH, *fIt) = Dm.inverse();
+        m_surface->property(m_restPoseMatrixFPH, *fIt) = restPoseMatrix.transpose().inverse().block<3,2>(0,0);
     }
 }

@@ -11,15 +11,12 @@ class TriMesh
 {
 public:
     typedef OpenMesh::TriMesh_ArrayKernelT<> Surface;
-
-private:
     typedef Surface::Point OMPoint;
     typedef Eigen::Matrix<double, 3, 1> Vector;
     typedef Eigen::Matrix<double, 2, 1> Vector2;
     typedef Eigen::Matrix<double, 3, 3> Matrix;
     typedef Eigen::Matrix<double, 2, 2> Matrix2;
 
-public:
     TriMesh();
     TriMesh(const std::string &filename);
     TriMesh(const std::vector<Vector> &vertices, const std::vector<unsigned int> &facets);
@@ -44,6 +41,7 @@ public:
     std::vector<Matrix2> dm() const;
     std::vector<double> areas() const;
     std::vector<double> edgesBending() const;
+    std::vector<Eigen::Matrix<double, 3, 2> > restPoseInverseMatrix() const;
 
     void computeVertexNormals();
     void computeDeformationGradients();
@@ -77,6 +75,7 @@ private:
     OpenMesh::FPropHandleT<std::array<double, 6> > m_dnFPH;
     OpenMesh::FPropHandleT<Matrix2> m_dMFPH;
     OpenMesh::EPropHandleT<double> m_bendingEPH;
+    OpenMesh::FPropHandleT<Eigen::Matrix<double, 3,2> > m_restPoseMatrixFPH;
 };
 
 #endif // TRIMESH_H
