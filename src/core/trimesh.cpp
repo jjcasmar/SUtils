@@ -74,7 +74,7 @@ TriMesh::TriMesh(const std::string &filename)
     auto fEnd = m_surface->faces_end();
     for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
         m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
-        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
+        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix32();
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
     }
@@ -274,15 +274,15 @@ std::vector<TriMesh::Vector> TriMesh::materialNormals() const
     return d;
 }
 
-std::vector<TriMesh::Matrix> TriMesh::deformationGradients() const
+std::vector<TriMesh::Matrix32> TriMesh::deformationGradients() const
 {
-    std::vector<Matrix> d(m_surface->n_faces());
+    std::vector<Matrix32> d(m_surface->n_faces());
 
     auto i = m_surface->faces_begin();
     auto e = m_surface->faces_end();
 
     for (auto it = i; it != e; ++it) {
-        Matrix m = m_surface->property(m_deformationGradientFPH, *it);
+        const Matrix32 m = m_surface->property(m_deformationGradientFPH, *it);
         d[it->idx()] = m;
     }
 
@@ -463,7 +463,7 @@ void TriMesh::computeVertexNormals()
 
 void TriMesh::computeDeformationGradients()
 {
-    Matrix F;
+    Matrix32 F;
     F.setZero();
 
     OMPoint m_a, m_b, m_c;
@@ -483,13 +483,7 @@ void TriMesh::computeDeformationGradients()
                 m_a[2], m_b[2], m_c[2];
 
         F.setZero();
-        F.block<3,2>(0,0) = poseMatrix*m_surface->property(m_restPoseMatrixFPH, *fIt);
-
-        const Vector vx = F.block<3,1>(0,0);
-        const Vector vy = F.block<3,1>(0,1);
-        const Vector vz = vx.cross(vy);
-
-        F.block<3,1>(0,2) = vz;
+        F = poseMatrix*m_surface->property(m_restPoseMatrixFPH, *fIt);
 
         m_surface->property(m_deformationGradientFPH, *fIt) = F;
     }
@@ -587,7 +581,7 @@ void TriMesh::refine(double targetEdgeLength)
     fEnd = m_surface->faces_end();
     for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
         m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
-        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
+        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix32();
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
     }
@@ -683,7 +677,7 @@ void TriMesh::initFromPointsAndFacets(const std::vector<TriMesh::Vector> &points
     auto fEnd = m_surface->faces_end();
     for (auto fIt = fBegin; fIt != fEnd; ++fIt) {
         m_surface->property(m_materialNormalFPH, *fIt) = m_surface->normal(*fIt);
-        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix::Identity();
+        m_surface->property(m_deformationGradientFPH, *fIt) = Matrix32();
         m_surface->property(m_areaFPH, *fIt) = faceArea(*fIt);
         m_surface->property(m_dnFPH, *fIt) = dn(*fIt);
 

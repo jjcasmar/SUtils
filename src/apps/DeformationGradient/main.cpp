@@ -21,7 +21,7 @@ int main (int argc, char **argv) {
 
     TriMesh mesh(points, indices);
     mesh.computeDeformationGradients();
-    Eigen::Matrix<double, 3, 2> F2 = mesh.deformationGradients()[0].block<3,2>(0,0);
+    Eigen::Matrix<double, 3, 2> F2 = mesh.deformationGradients()[0];
     Eigen::Matrix<double, 2, 2> E2 = 0.5*(F2.transpose()*F2 - I2);
 
     std::cout << F2 << std::endl;
@@ -31,13 +31,13 @@ int main (int argc, char **argv) {
     std::cout << std::endl;
     std::cout << std::endl;
 
-    points[1][0] = 2;
-    points[1][1] = 2;
-    points[2][1] = 2;
+    points[0][1] = 4;
+    points[1][2] = 7;
+    points[2][0] = 2;
     mesh.setPoints(points);
     mesh.computeDeformationGradients();
-    Eigen::Matrix<double, 3, 3> F3 = mesh.deformationGradients()[0];
-    Eigen::Matrix<double, 3, 3> E3 = 0.5*(F3.transpose()*F3 - I3);
+    Eigen::Matrix<double, 3, 2> F3 = mesh.deformationGradients()[0];
+    Eigen::Matrix<double, 2, 2> E3 = 0.5*(F3.transpose()*F3 - I2);
     std::cout << F3 << std::endl;
     std::cout << std::endl;
     std::cout << E3 << std::endl;
