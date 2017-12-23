@@ -13,19 +13,22 @@ IF (OPENMESH_INCLUDE_DIR)
 ENDIF (OPENMESH_INCLUDE_DIR)
 
 FIND_PATH(OPENMESH_INCLUDE_DIR OpenMesh/Core/Mesh/PolyMeshT.hh
-	  PATHS /usr/local/include 
+	  PATHS
+                $ENV{HOME}/usr/local/include
+                /usr/local/include 
                 /usr/include 
                 /opt/local/include
-				/opt/include
-				$ENV{OPENMESH_DIR}/src
+		/opt/include
+		$ENV{OPENMESH_DIR}/src
                 $ENV{OPENMESH_DIR}/include
+                /home/jjcasmar/usr/local/include
                 )
 
 IF (OPENMESH_INCLUDE_DIR)
 	IF (WIN32)
 	   SET(OPENMESH_LIBRARY_DIR "${OPENMESH_INCLUDE_DIR}/../lib")
 	ELSE (WIN32)
-	   SET(OPENMESH_LIBRARY_DIR "${OPENMESH_INCLUDE_DIR}/../lib/OpenMesh")
+	   SET(OPENMESH_LIBRARY_DIR "${OPENMESH_INCLUDE_DIR}/../lib")
 	ENDIF (WIN32)
 
 	FIND_LIBRARY(OPENMESH_CORE_LIBRARY_RELEASE NAMES OpenMeshCore libOpenMeshCore PATHS ${OPENMESH_LIBRARY_DIR})
